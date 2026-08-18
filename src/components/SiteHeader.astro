@@ -1,0 +1,126 @@
+---
+import {
+  chapters,
+  copy,
+  externalLinks,
+  localeNames,
+  localeShortNames,
+  locales,
+  routeFor,
+  siteTitle,
+  type ChapterSlug,
+  type Locale,
+} from "../data/site";
+
+type Props = {
+  locale: Locale;
+  currentChapter?: ChapterSlug;
+};
+
+const { locale, currentChapter } = Astro.props;
+const t = copy[locale];
+---
+
+<header class="site-header" data-site-header>
+  <a class="site-kicker" href={routeFor(locale)} aria-label={`${siteTitle} — ${t.home}`}>
+    <span>JAPAN</span>
+    <span aria-hidden="true">·</span>
+    <span>2026</span>
+  </a>
+
+  <div class="site-header__actions">
+    <details class="language-switcher" data-language-switcher>
+      <summary aria-label={t.language}>
+        <span aria-hidden="true">{localeShortNames[locale]}</span>
+        <span class="sr-only">{localeNames[locale]}</span>
+        <svg viewBox="0 0 12 8" aria-hidden="true">
+          <path d="m1 1.5 5 5 5-5" />
+        </svg>
+      </summary>
+      <nav class="language-switcher__menu" aria-label={t.language}>
+        {locales.map((item) => (
+          <a
+            href={routeFor(item, currentChapter)}
+            lang={item}
+            aria-current={item === locale ? "page" : undefined}
+            data-locale-link={item}
+          >
+            <span>{localeNames[item]}</span>
+            <span>{localeShortNames[item]}</span>
+          </a>
+        ))}
+      </nav>
+    </details>
+
+    <button
+      class="menu-button"
+      type="button"
+      aria-haspopup="dialog"
+      aria-controls="site-menu"
+      aria-expanded="false"
+      aria-label={t.menu}
+      data-menu-open
+    >
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<dialog class="menu-dialog" id="site-menu" aria-labelledby="site-menu-title" data-site-menu>
+  <div class="menu-dialog__panel">
+    <header class="menu-dialog__header">
+      <p id="site-menu-title">{siteTitle}</p>
+      <button class="menu-close" type="button" aria-label={t.closeMenu} data-menu-close>
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <div class="menu-dialog__body">
+      <nav class="menu-primary" aria-label={t.chapters}>
+        <a href={routeFor(locale)} aria-current={!currentChapter ? "page" : undefined}>
+          <span class="menu-primary__number">00</span>
+          <span>{t.home}</span>
+        </a>
+        {chapters.map((chapter) => (
+          <a
+            href={routeFor(locale, chapter.slug)}
+            aria-current={currentChapter === chapter.slug ? "page" : undefined}
+          >
+            <span class="menu-primary__number">{chapter.number}</span>
+            <span>{chapter.menuLabel[locale]}</span>
+          </a>
+        ))}
+      </nav>
+
+      <section class="menu-secondary" aria-labelledby="external-heading">
+        <h2 id="external-heading">{t.external}</h2>
+        <div class="menu-secondary__links">
+          {externalLinks.map((link) => (
+            link.href ? (
+              <a href={link.href}>{link.label}</a>
+            ) : (
+              <span class="pending-link" aria-disabled="true">
+                <span>{link.label}</span>
+                <small>{t.comingSoon}</small>
+              </span>
+            )
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <footer class="menu-dialog__footer">
+      <fieldset class="theme-picker" data-theme-picker>
+        <legend>{t.appearance}</legend>
+        <div>
+          <button type="button" data-theme-choice="system">{t.themeSystem}</button>
+          <button type="button" data-theme-choice="light">{t.themeLight}</button>
+          <button type="button" data-theme-choice="dark">{t.themeDark}</button>
+        </div>
+      </fieldset>
+      <p>{t.copyright}</p>
+    </footer>
+  </div>
+</dialog>

@@ -1,0 +1,73 @@
+---
+import { chapters, copy, routeFor, siteTitle, type Locale } from "../data/site";
+
+type Props = { locale: Locale };
+const { locale } = Astro.props;
+const t = copy[locale];
+---
+
+<section
+  class="home-hero"
+  aria-labelledby="home-title"
+  data-hero
+  data-active-slide="0"
+  data-cycle-state="running"
+  data-cycle-duration="7000"
+>
+  <div class="home-hero__slides" aria-live="off">
+    {chapters.map((chapter, index) => (
+      <div
+        class="home-hero__slide"
+        data-hero-slide
+        data-slide-index={index}
+        aria-hidden={index === 0 ? "false" : "true"}
+        style={`--placeholder: ${chapter.background}; --placeholder-dark: ${chapter.backgroundDark};`}
+      >
+        <div class="home-hero__rule" aria-hidden="true"></div>
+        <p class="home-hero__place" lang={locale}>
+          <span>{chapter.number}</span>
+          <span>{chapter.placeholderLabel[locale]}</span>
+        </p>
+        <p class="home-hero__pending">{t.photographPending}</p>
+      </div>
+    ))}
+  </div>
+
+  <div class="home-hero__shade" aria-hidden="true"></div>
+
+  <div class="home-hero__content">
+    <div class="home-hero__copy">
+      <p class="home-hero__eyebrow">MORII · JAPAN · 2026</p>
+      <h1 id="home-title" lang="ja">{siteTitle}</h1>
+      <p class="home-hero__intro">{t.intro}</p>
+    </div>
+
+    <div class="home-hero__navigation">
+      <nav class="chapter-rail" aria-label={t.chapters} data-chapter-rail>
+        {chapters.map((chapter, index) => (
+          <a
+            href={routeFor(locale, chapter.slug)}
+            data-chapter-preview={index}
+            data-active={index === 0 ? "true" : "false"}
+          >
+            <span class="chapter-rail__number">{chapter.number}</span>
+            <span class="chapter-rail__label">{chapter.label[locale]}</span>
+            <span class="chapter-rail__progress" aria-hidden="true"></span>
+          </a>
+        ))}
+      </nav>
+
+      <button
+        class="carousel-toggle"
+        type="button"
+        aria-pressed="false"
+        data-carousel-toggle
+        data-pause-label={t.pauseCarousel}
+        data-play-label={t.playCarousel}
+      >
+        <span class="carousel-toggle__mark" aria-hidden="true">Ⅱ</span>
+        <span data-carousel-toggle-label>{t.pauseCarousel}</span>
+      </button>
+    </div>
+  </div>
+</section>

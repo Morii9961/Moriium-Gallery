@@ -1,0 +1,41 @@
+---
+import { localeNames, locales, siteTitle } from "../data/site";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{siteTitle}</title>
+    <script is:inline>
+      (() => {
+        const supported = ["zh", "ja", "en"];
+        let locale = "";
+        try {
+          locale = localStorage.getItem("moriium-locale") || "";
+        } catch {}
+        if (!supported.includes(locale)) {
+          const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+          locale = languages
+            .map((language) => language.toLowerCase().split("-")[0])
+            .find((language) => supported.includes(language)) || "zh";
+        }
+        location.replace(`/${locale}/`);
+      })();
+    </script>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #f2efe7; color: #2c2723; }
+      nav { display: flex; gap: 1.5rem; }
+      a { color: inherit; text-underline-offset: .3em; }
+      @media (prefers-color-scheme: dark) { body { background: #211a16; color: #efe7da; } }
+    </style>
+  </head>
+  <body>
+    <nav aria-label="Choose language">
+      {locales.map((locale) => <a href={`/${locale}/`}>{localeNames[locale]}</a>)}
+    </nav>
+  </body>
+</html>

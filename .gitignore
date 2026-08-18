@@ -1,0 +1,20 @@
+# dependencies and Astro build state
+node_modules/
+.astro/
+dist/
+
+# local environment
+.env
+.env.*
+!.env.example
+
+# operating-system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Original photographs must never be committed. Only sanitized derivatives
+# approved for public display belong under src/assets/photos/.
+photos-original/
+src/assets/photos-original/
