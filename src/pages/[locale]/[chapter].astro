@@ -1,5 +1,5 @@
 ---
-import ChapterPlaceholder from "../../components/ChapterPlaceholder.astro";
+import ChapterLanding from "../../components/ChapterLanding.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import {
   chapters,
@@ -32,7 +32,7 @@ const { locale, chapter } = Astro.props;
   <div class="page-shell page-shell--chapter">
     <SiteHeader locale={locale} currentChapter={chapter.slug} />
     <main id="main-content" class="chapter-main">
-      <ChapterPlaceholder locale={locale} chapter={chapter} />
+      <ChapterLanding locale={locale} chapter={chapter} />
     </main>
   </div>
 </BaseLayout>

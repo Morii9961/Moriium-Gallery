@@ -1,0 +1,51 @@
+---
+import SiteHeader from "../../../components/SiteHeader.astro";
+import ThemePlaceholder from "../../../components/ThemePlaceholder.astro";
+import {
+  chapters,
+  copy,
+  locales,
+  type Chapter,
+  type ChapterTheme,
+  type Locale,
+} from "../../../data/site";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) =>
+    chapters.flatMap((chapter) =>
+      chapter.themes.map((theme) => ({
+        params: { locale, chapter: chapter.slug, theme: theme.slug },
+        props: { locale, chapter, theme },
+      })),
+    ),
+  );
+}
+
+type Props = {
+  locale: Locale;
+  chapter: Chapter;
+  theme: ChapterTheme;
+};
+
+const { locale, chapter, theme } = Astro.props;
+---
+
+<BaseLayout
+  locale={locale}
+  currentChapter={chapter.slug}
+  currentTheme={theme.slug}
+  pageTitle={`${theme.label[locale]} · ${chapter.label[locale]}`}
+  description={`${theme.placeholderDescription[locale]} ${copy[locale].description}`}
+>
+  <div class="page-shell page-shell--theme">
+    <SiteHeader
+      locale={locale}
+      currentChapter={chapter.slug}
+      currentTheme={theme.slug}
+    />
+    <main id="main-content" class="chapter-main">
+      <ThemePlaceholder locale={locale} chapter={chapter} theme={theme} />
+    </main>
+  </div>
+</BaseLayout>

@@ -45,31 +45,31 @@
 @layer tokens {
   :root {
     color-scheme: light;
-    --canvas: #f2efe7;
-    --surface: #faf8f2;
-    --ink: #2c2723;
-    --muted: #746b62;
-    --line: #b9afa2;
-    --accent: #765e49;
-    --focus: #4f3a2b;
-    --paper-shadow: rgb(44 39 35 / 10%);
+    --canvas: #e9e3d6;
+    --surface: #f4f0e7;
+    --ink: #332f2b;
+    --muted: #756e65;
+    --line: #b5ac9f;
+    --accent: #79644f;
+    --focus: #4f4034;
+    --paper-shadow: rgb(51 47 43 / 10%);
     --on-photo: #fffaf1;
     --on-photo-muted: rgb(255 250 241 / 76%);
     --header-height: 3.25rem;
     --page-gutter: clamp(1rem, 3.8vw, 4.75rem);
     --page-block: clamp(0.875rem, 2vw, 2rem);
-    --cycle-duration: 7000ms;
+    --cycle-duration: 3000ms;
   }
 
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --canvas: #211a16;
-    --surface: #2b221d;
-    --ink: #efe7da;
-    --muted: #baaa99;
-    --line: #5b493d;
-    --accent: #b49372;
-    --focus: #e4c5a4;
+    --canvas: #242526;
+    --surface: #2c2d2f;
+    --ink: #e7e4dc;
+    --muted: #a7a5a0;
+    --line: #555658;
+    --accent: #b6a78f;
+    --focus: #d6c5aa;
     --paper-shadow: rgb(0 0 0 / 24%);
   }
 }
@@ -647,7 +647,7 @@
     left: 0;
     height: 1px;
     overflow: hidden;
-    background: rgb(255 250 241 / 32%);
+    background: rgb(255 250 241 / 30%);
   }
 
   .chapter-rail__progress::after {
@@ -657,20 +657,39 @@
     background: var(--on-photo);
     transform: scaleX(0);
     transform-origin: left;
+    transition: transform 180ms ease;
   }
 
-  .home-hero[data-cycle-state="running"] .chapter-rail a[data-active="true"] .chapter-rail__progress::after {
-    animation: chapter-progress var(--cycle-duration) linear forwards;
+  .chapter-rail a[data-active="true"] .chapter-rail__progress::after {
+    transform: scaleX(1);
   }
 
-  @keyframes chapter-progress {
-    to { transform: scaleX(1); }
+  .carousel-controls {
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--on-photo-muted);
+  }
+
+  .carousel-toggle:hover {
+    color: var(--on-photo);
+  }
+
+  .carousel-toggle svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.4;
   }
 
   .carousel-toggle {
     min-width: 7.5rem;
     min-height: 2.75rem;
-    padding: 0 0.2rem;
+    padding: 0 0.25rem;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
@@ -680,19 +699,22 @@
     cursor: pointer;
     font-size: 0.68rem;
     letter-spacing: 0.08em;
+    transition: color 180ms ease;
   }
 
-  .carousel-toggle:hover {
-    color: var(--on-photo);
+  .carousel-toggle__icon {
+    width: 1rem;
+    height: 1rem;
+    display: grid;
+    place-items: center;
   }
 
-  .carousel-toggle__mark {
-    min-width: 1rem;
-    font-size: 0.62rem;
-    letter-spacing: -0.2em;
+  .carousel-toggle__icon svg[data-visible="false"] {
+    display: none;
   }
 
-  .chapter-placeholder {
+  .chapter-landing,
+  .theme-placeholder {
     min-height: clamp(35rem, calc(100svh - 9rem), 58rem);
     height: 100%;
     display: grid;
@@ -703,54 +725,101 @@
     box-shadow: 0 1.25rem 4rem var(--paper-shadow);
   }
 
-  .chapter-placeholder__field {
+  .chapter-landing__visual {
     position: relative;
-    padding: clamp(2rem, 5vw, 4rem);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: var(--placeholder);
+    isolation: isolate;
+    overflow: hidden;
+    background: #56605c;
     color: rgb(255 250 241 / 74%);
     font-family: var(--font-title, "Noto Serif JP"), "Yu Mincho", serif;
     letter-spacing: 0.18em;
   }
 
-  :root[data-theme="dark"] .chapter-placeholder__field {
-    background: var(--placeholder-dark);
+  .chapter-landing__slides,
+  .chapter-landing__slide {
+    position: absolute;
+    inset: 0;
   }
 
-  .chapter-placeholder__field::after {
-    content: "";
+  .chapter-landing__slide {
+    background: var(--placeholder-dark);
+    opacity: 0;
+    transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  :root[data-theme="light"] .chapter-landing__slide {
+    background: var(--placeholder);
+  }
+
+  .chapter-landing__slide[aria-hidden="false"] {
+    opacity: 1;
+  }
+
+  .chapter-landing__frame {
     position: absolute;
+    z-index: 2;
     inset: clamp(1rem, 2vw, 2rem);
     border: 1px solid rgb(255 250 241 / 18%);
+    pointer-events: none;
   }
 
-  .chapter-placeholder__field span:first-child {
+  .chapter-landing__number,
+  .chapter-landing__pending,
+  .chapter-landing__place,
+  .chapter-landing__visual > .carousel-controls {
+    position: absolute;
+    z-index: 3;
+  }
+
+  .chapter-landing__number {
+    top: clamp(2rem, 4vw, 3.5rem);
+    left: clamp(2rem, 4vw, 3.5rem);
     font-size: 0.72rem;
   }
 
-  .chapter-placeholder__field span:last-child {
-    align-self: flex-end;
+  .chapter-landing__pending {
+    top: clamp(2rem, 4vw, 3.5rem);
+    right: clamp(2rem, 4vw, 3.5rem);
+    color: rgb(255 250 241 / 56%);
+    font-family: inherit;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
+  .chapter-landing__place {
+    right: clamp(2rem, 4vw, 3.5rem);
+    bottom: clamp(2rem, 4vw, 3.5rem);
     font-size: clamp(1rem, 2vw, 1.4rem);
     writing-mode: vertical-rl;
   }
 
-  .chapter-placeholder__content {
-    padding: clamp(2.5rem, 8vw, 8rem);
+  .chapter-landing__visual > .carousel-controls {
+    bottom: clamp(1.75rem, 4vw, 3.25rem);
+    left: clamp(1.75rem, 4vw, 3.25rem);
+    font-family:
+      "Noto Sans SC",
+      "Noto Sans JP",
+      system-ui,
+      sans-serif;
+    letter-spacing: normal;
+  }
+
+  .chapter-landing__content {
+    padding: clamp(2.5rem, 7vw, 7rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
 
-  .chapter-placeholder__content > p:first-child {
+  .chapter-landing__content > p:first-child {
     color: var(--muted);
     font-family: var(--font-title, "Noto Serif JP"), "Yu Mincho", serif;
     font-size: 0.8rem;
     letter-spacing: 0.12em;
   }
 
-  .chapter-placeholder h1 {
+  .chapter-landing h1,
+  .theme-placeholder h1 {
     margin-top: 1.1rem;
     font-family: var(--font-title, "Noto Serif JP"), "Yu Mincho", serif;
     font-size: clamp(2.5rem, 6vw, 5.5rem);
@@ -759,14 +828,61 @@
     line-height: 1.15;
   }
 
-  .chapter-placeholder h1 + p {
-    max-width: 32rem;
-    margin-top: 1.5rem;
-    color: var(--muted);
-    line-height: 1.9;
+  .theme-directory {
+    width: min(34rem, 100%);
+    margin-top: clamp(2.5rem, 6vh, 4.5rem);
+    border-top: 1px solid var(--line);
   }
 
-  .chapter-placeholder__content > a {
+  .theme-directory a {
+    min-height: 5rem;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .theme-directory__number {
+    align-self: start;
+    padding-top: 1.35rem;
+    color: var(--muted);
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
+
+  .theme-directory__label {
+    font-family: var(--font-title, "Noto Serif JP"), "Yu Mincho", serif;
+    font-size: clamp(1.05rem, 1.65vw, 1.4rem);
+    letter-spacing: 0.09em;
+    transition: color 180ms ease;
+  }
+
+  .theme-directory svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.25;
+    transition: transform 180ms ease;
+  }
+
+  .theme-directory a:hover .theme-directory__label,
+  .theme-directory a:focus-visible .theme-directory__label {
+    color: var(--accent);
+  }
+
+  .theme-directory a:hover svg,
+  .theme-directory a:focus-visible svg {
+    transform: translate(0.2rem, -0.2rem);
+  }
+
+  .chapter-landing__back,
+  .theme-placeholder__content > a {
     width: fit-content;
     min-height: 2.75rem;
     margin-top: 2.5rem;
@@ -779,6 +895,40 @@
     font-size: 0.84rem;
     letter-spacing: 0.08em;
     text-decoration: none;
+  }
+
+  .theme-placeholder__field {
+    position: relative;
+    padding: clamp(2rem, 5vw, 4rem);
+    background: var(--placeholder);
+    color: rgb(255 250 241 / 74%);
+    font-family: var(--font-title, "Noto Serif JP"), "Yu Mincho", serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+  }
+
+  :root[data-theme="dark"] .theme-placeholder__field {
+    background: var(--placeholder-dark);
+  }
+
+  .theme-placeholder__field::after {
+    content: "";
+    position: absolute;
+    inset: clamp(1rem, 2vw, 2rem);
+    border: 1px solid rgb(255 250 241 / 18%);
+  }
+
+  .theme-placeholder__content {
+    padding: clamp(2.5rem, 8vw, 8rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .theme-placeholder__content > p:first-child {
+    color: var(--muted);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
   }
 }
 
@@ -857,22 +1007,63 @@
       justify-content: flex-start;
     }
 
-    .chapter-placeholder {
+    .home-hero .carousel-controls {
+      justify-content: flex-start;
+    }
+
+    .chapter-landing,
+    .theme-placeholder {
       min-height: calc(100svh - 6.2rem);
       grid-template-columns: 1fr;
-      grid-template-rows: minmax(12rem, 38%) 1fr;
+      grid-template-rows: minmax(16rem, 40%) 1fr;
     }
 
-    .chapter-placeholder__field {
-      padding: 2rem;
+    .chapter-landing__number {
+      top: 1.5rem;
+      left: 1.5rem;
     }
 
-    .chapter-placeholder__field span:last-child {
+    .chapter-landing__pending {
+      top: 1.5rem;
+      right: 1.5rem;
+    }
+
+    .chapter-landing__place {
+      right: 1.5rem;
+      bottom: 1.5rem;
       font-size: 0.9rem;
     }
 
-    .chapter-placeholder__content {
+    .chapter-landing__visual > .carousel-controls {
+      bottom: 1rem;
+      left: 1rem;
+    }
+
+    .chapter-landing__content,
+    .theme-placeholder__content {
       padding: clamp(2rem, 8vw, 3.5rem);
+    }
+
+    .chapter-landing h1,
+    .theme-placeholder h1 {
+      font-size: clamp(2.4rem, 12vw, 4rem);
+    }
+
+    .theme-directory {
+      margin-top: 2rem;
+    }
+
+    .theme-directory a {
+      min-height: 4.5rem;
+      grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    }
+
+    .theme-directory__number {
+      padding-top: 1.15rem;
+    }
+
+    .theme-placeholder__field {
+      padding: 2rem;
     }
 
     .menu-dialog {
@@ -886,7 +1077,8 @@
     }
 
     .home-hero,
-    .chapter-placeholder {
+    .chapter-landing,
+    .theme-placeholder {
       min-height: 34rem;
     }
   }
@@ -897,7 +1089,8 @@
     }
 
     .home-hero,
-    .chapter-placeholder {
+    .chapter-landing,
+    .theme-placeholder {
       min-height: 36rem;
     }
   }

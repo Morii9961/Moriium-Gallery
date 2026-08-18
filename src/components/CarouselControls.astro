@@ -1,0 +1,31 @@
+---
+import { copy, type Locale } from "../data/site";
+
+type Props = {
+  locale: Locale;
+};
+
+const { locale } = Astro.props;
+const t = copy[locale];
+---
+
+<div class="carousel-controls">
+  <button
+    class="carousel-toggle"
+    type="button"
+    aria-pressed="false"
+    data-carousel-toggle
+    data-pause-label={t.pauseCarousel}
+    data-play-label={t.playCarousel}
+  >
+    <span class="carousel-toggle__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" data-carousel-pause-icon data-visible="true">
+        <path d="M9 7v10M15 7v10" />
+      </svg>
+      <svg viewBox="0 0 24 24" data-carousel-play-icon data-visible="false">
+        <path d="m9 7 8 5-8 5Z" />
+      </svg>
+    </span>
+    <span data-carousel-toggle-label>{t.pauseCarousel}</span>
+  </button>
+</div>

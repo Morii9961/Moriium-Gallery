@@ -20,7 +20,7 @@ function initializeTheme() {
     const isDark = preference === "dark" || (preference === "system" && media.matches);
     root.dataset.themePreference = preference;
     root.dataset.theme = isDark ? "dark" : "light";
-    themeColor?.setAttribute("content", isDark ? "#211a16" : "#f2efe7");
+    themeColor?.setAttribute("content", isDark ? "#242526" : "#e9e3d6");
     buttons.forEach((button) => {
       button.setAttribute(
         "aria-pressed",
@@ -112,78 +112,111 @@ function initializeLanguageSwitcher() {
   });
 }
 
-function initializeCarousel() {
-  const hero = document.querySelector<HTMLElement>("[data-hero]");
-  if (!hero) return;
+function initializeCarousel(carousel: HTMLElement) {
+  const slides = Array.from(
+    carousel.querySelectorAll<HTMLElement>("[data-carousel-slide]"),
+  );
+  if (slides.length === 0) return;
 
-  const slides = Array.from(hero.querySelectorAll<HTMLElement>("[data-hero-slide]"));
-  const links = Array.from(hero.querySelectorAll<HTMLAnchorElement>("[data-chapter-preview]"));
-  const toggle = hero.querySelector<HTMLButtonElement>("[data-carousel-toggle]");
+  const groupLinks = Array.from(
+    carousel.querySelectorAll<HTMLAnchorElement>("[data-carousel-group-link]"),
+  );
+  const frameNumbers = Array.from(
+    carousel.querySelectorAll<HTMLElement>("[data-chapter-frame-number]"),
+  );
+  const toggle = carousel.querySelector<HTMLButtonElement>("[data-carousel-toggle]");
   const toggleLabel = toggle?.querySelector<HTMLElement>("[data-carousel-toggle-label]");
-  const toggleMark = toggle?.querySelector<HTMLElement>(".carousel-toggle__mark");
+  const pauseIcon = toggle?.querySelector<SVGElement>("[data-carousel-pause-icon]");
+  const playIcon = toggle?.querySelector<SVGElement>("[data-carousel-play-icon]");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const duration = Number(hero.dataset.cycleDuration || "7000");
+  const duration = Number(carousel.dataset.cycleDuration || "3000");
 
   let active = 0;
   let timer: number | undefined;
   let userPaused = reducedMotion.matches;
-  let interactionPaused = false;
+  let pointerPaused = false;
+  let focusPaused = false;
 
-  hero.style.setProperty("--cycle-duration", `${duration}ms`);
+  carousel.style.setProperty("--cycle-duration", `${duration}ms`);
 
   const setActive = (index: number) => {
     active = (index + slides.length) % slides.length;
-    hero.dataset.activeSlide = String(active);
+    carousel.dataset.activeSlide = String(active);
+
     slides.forEach((slide, slideIndex) => {
       slide.setAttribute("aria-hidden", String(slideIndex !== active));
     });
-    links.forEach((link, linkIndex) => {
-      link.dataset.active = String(linkIndex === active);
+
+    const activeSlide = slides[active];
+    const activeGroup = activeSlide.dataset.carouselGroup;
+
+    groupLinks.forEach((link) => {
+      const isActiveGroup = link.dataset.carouselGroupLink === activeGroup;
+      link.dataset.active = String(isActiveGroup);
+    });
+
+    const displayIndex = String(active + 1).padStart(2, "0");
+    frameNumbers.forEach((number) => {
+      number.textContent = displayIndex;
     });
   };
 
   const stopTimer = () => {
     if (timer !== undefined) window.clearInterval(timer);
     timer = undefined;
-    hero.dataset.cycleState = "paused";
+    carousel.dataset.cycleState = "paused";
   };
 
   const startTimer = () => {
     stopTimer();
-    if (userPaused || interactionPaused || reducedMotion.matches || document.hidden) return;
-    hero.dataset.cycleState = "running";
+    if (userPaused || pointerPaused || focusPaused || document.hidden) return;
+    carousel.dataset.cycleState = "running";
     timer = window.setInterval(() => setActive(active + 1), duration);
   };
 
   const syncToggle = () => {
-    if (!toggle || !toggleLabel || !toggleMark) return;
-    const paused = userPaused || reducedMotion.matches;
-    toggle.setAttribute("aria-pressed", String(paused));
-    toggleLabel.textContent = paused
+    if (!toggle || !toggleLabel) return;
+    toggle.setAttribute("aria-pressed", String(userPaused));
+    toggleLabel.textContent = userPaused
       ? toggle.dataset.playLabel || "Play"
       : toggle.dataset.pauseLabel || "Pause";
-    toggleMark.textContent = paused ? "▶" : "Ⅱ";
+    pauseIcon?.setAttribute("data-visible", String(!userPaused));
+    playIcon?.setAttribute("data-visible", String(userPaused));
   };
 
-  links.forEach((link, index) => {
-    const preview = () => {
-      interactionPaused = true;
-      stopTimer();
-      setActive(index);
+  groupLinks.forEach((link) => {
+    const previewGroup = () => {
+      const group = link.dataset.carouselGroupLink;
+      const firstSlide = slides.findIndex(
+        (slide) => slide.dataset.carouselGroup === group,
+      );
+      if (firstSlide >= 0) setActive(firstSlide);
     };
-    const resume = () => {
-      interactionPaused = false;
-      startTimer();
-    };
-    link.addEventListener("pointerenter", preview);
-    link.addEventListener("pointerleave", resume);
-    link.addEventListener("focus", preview);
-    link.addEventListener("blur", resume);
+    link.addEventListener("pointerenter", previewGroup);
+    link.addEventListener("focus", previewGroup);
   });
 
   toggle?.addEventListener("click", () => {
     userPaused = !userPaused;
     syncToggle();
+    startTimer();
+  });
+
+  carousel.addEventListener("pointerenter", () => {
+    pointerPaused = true;
+    startTimer();
+  });
+  carousel.addEventListener("pointerleave", () => {
+    pointerPaused = false;
+    startTimer();
+  });
+  carousel.addEventListener("focusin", () => {
+    focusPaused = true;
+    startTimer();
+  });
+  carousel.addEventListener("focusout", (event) => {
+    if (carousel.contains(event.relatedTarget as Node | null)) return;
+    focusPaused = false;
     startTimer();
   });
 
@@ -202,4 +235,4 @@ function initializeCarousel() {
 initializeTheme();
 initializeMenu();
 initializeLanguageSwitcher();
-initializeCarousel();
+document.querySelectorAll<HTMLElement>("[data-carousel]").forEach(initializeCarousel);

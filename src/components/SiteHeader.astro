@@ -10,14 +10,16 @@ import {
   siteTitle,
   type ChapterSlug,
   type Locale,
+  type ThemeSlug,
 } from "../data/site";
 
 type Props = {
   locale: Locale;
   currentChapter?: ChapterSlug;
+  currentTheme?: ThemeSlug;
 };
 
-const { locale, currentChapter } = Astro.props;
+const { locale, currentChapter, currentTheme } = Astro.props;
 const t = copy[locale];
 ---
 
@@ -40,7 +42,7 @@ const t = copy[locale];
       <nav class="language-switcher__menu" aria-label={t.language}>
         {locales.map((item) => (
           <a
-            href={routeFor(item, currentChapter)}
+            href={routeFor(item, currentChapter, currentTheme)}
             lang={item}
             aria-current={item === locale ? "page" : undefined}
             data-locale-link={item}

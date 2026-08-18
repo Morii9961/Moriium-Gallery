@@ -3,9 +3,32 @@ export type Locale = (typeof locales)[number];
 
 export const chapterSlugs = ["fuji", "tokyo", "kyoto"] as const;
 export type ChapterSlug = (typeof chapterSlugs)[number];
+
+export const themeSlugs = [
+  "cloud-fuji",
+  "kawaguchiko-festival",
+  "tokyo-views",
+  "tokyo-rainy-night",
+  "kyoto-city",
+  "northern-kyoto",
+] as const;
+export type ThemeSlug = (typeof themeSlugs)[number];
 export type ThemePreference = "system" | "light" | "dark";
 
 type LocalizedText = Record<Locale, string>;
+
+export type PreviewFrame = {
+  id: string;
+  background: string;
+  backgroundDark: string;
+};
+
+export type ChapterTheme = {
+  slug: ThemeSlug;
+  number: string;
+  label: LocalizedText;
+  placeholderDescription: LocalizedText;
+};
 
 export type Chapter = {
   slug: ChapterSlug;
@@ -14,8 +37,8 @@ export type Chapter = {
   menuLabel: LocalizedText;
   placeholderLabel: LocalizedText;
   placeholderDescription: LocalizedText;
-  background: string;
-  backgroundDark: string;
+  previews: readonly [PreviewFrame, PreviewFrame, PreviewFrame];
+  themes: readonly [ChapterTheme, ChapterTheme];
 };
 
 export const siteTitle = "森井永響の日本紀行";
@@ -47,6 +70,7 @@ export const copy = {
     closeMenu: "关闭菜单",
     home: "首页",
     chapters: "摄影篇章",
+    chapterThemes: "摄影主题",
     external: "外部链接",
     comingSoon: "准备中",
     appearance: "外观",
@@ -60,7 +84,7 @@ export const copy = {
     photographPending: "代表照片待选",
     photographsPending: "照片整理中",
     backHome: "返回首页",
-    chapterPageDescription: "本篇照片正在整理，稍后将从这里进入完整摄影集。",
+    backChapter: "返回篇章",
     copyright: "© 2026 Morii。保留全部权利。",
   },
   ja: {
@@ -71,6 +95,7 @@ export const copy = {
     closeMenu: "メニューを閉じる",
     home: "ホーム",
     chapters: "写真の章",
+    chapterThemes: "写真のテーマ",
     external: "外部リンク",
     comingSoon: "準備中",
     appearance: "表示",
@@ -84,7 +109,7 @@ export const copy = {
     photographPending: "代表写真を選定中",
     photographsPending: "写真を整理しています",
     backHome: "ホームへ戻る",
-    chapterPageDescription: "この章の写真を整理しています。完成後、ここから写真集をご覧いただけます。",
+    backChapter: "章へ戻る",
     copyright: "© 2026 Morii。無断転載を禁じます。",
   },
   en: {
@@ -95,6 +120,7 @@ export const copy = {
     closeMenu: "Close menu",
     home: "Home",
     chapters: "Photographic chapters",
+    chapterThemes: "Photographic themes",
     external: "External links",
     comingSoon: "Coming soon",
     appearance: "Appearance",
@@ -108,13 +134,12 @@ export const copy = {
     photographPending: "Featured photograph pending",
     photographsPending: "Photographs in preparation",
     backHome: "Back home",
-    chapterPageDescription:
-      "The photographs for this chapter are being prepared. The complete gallery will open here.",
+    backChapter: "Back to chapter",
     copyright: "© 2026 Morii. All rights reserved.",
   },
 } as const;
 
-export const chapters: readonly Chapter[] = [
+export const chapters = [
   {
     slug: "fuji",
     number: "01",
@@ -126,8 +151,33 @@ export const chapters: readonly Chapter[] = [
       ja: "富士編の写真を整理しています。",
       en: "The Fuji photographs are being prepared.",
     },
-    background: "#66736f",
-    backgroundDark: "#4d5a56",
+    previews: [
+      { id: "fuji-01", background: "#66736f", backgroundDark: "#4d5a56" },
+      { id: "fuji-02", background: "#5f6c72", backgroundDark: "#47545a" },
+      { id: "fuji-03", background: "#74736a", backgroundDark: "#59584f" },
+    ],
+    themes: [
+      {
+        slug: "cloud-fuji",
+        number: "01",
+        label: { zh: "云中富士", ja: "雲間の富士", en: "Fuji in the Clouds" },
+        placeholderDescription: {
+          zh: "云中富士的照片正在整理。",
+          ja: "「雲間の富士」の写真を整理しています。",
+          en: "The Fuji in the Clouds photographs are being prepared.",
+        },
+      },
+      {
+        slug: "kawaguchiko-festival",
+        number: "02",
+        label: { zh: "河口湖湖上祭", ja: "河口湖湖上祭", en: "Lake Kawaguchi Festival" },
+        placeholderDescription: {
+          zh: "河口湖湖上祭的照片正在整理。",
+          ja: "河口湖湖上祭の写真を整理しています。",
+          en: "The Lake Kawaguchi Festival photographs are being prepared.",
+        },
+      },
+    ],
   },
   {
     slug: "tokyo",
@@ -140,8 +190,33 @@ export const chapters: readonly Chapter[] = [
       ja: "東京編の写真を整理しています。",
       en: "The Tokyo photographs are being prepared.",
     },
-    background: "#55585d",
-    backgroundDark: "#3f4247",
+    previews: [
+      { id: "tokyo-01", background: "#55585d", backgroundDark: "#3f4247" },
+      { id: "tokyo-02", background: "#4f5961", backgroundDark: "#3a444b" },
+      { id: "tokyo-03", background: "#615a5d", backgroundDark: "#484144" },
+    ],
+    themes: [
+      {
+        slug: "tokyo-views",
+        number: "01",
+        label: { zh: "东京展望", ja: "東京を望む", en: "Tokyo from Above" },
+        placeholderDescription: {
+          zh: "东京展望的照片正在整理。",
+          ja: "「東京を望む」の写真を整理しています。",
+          en: "The Tokyo from Above photographs are being prepared.",
+        },
+      },
+      {
+        slug: "tokyo-rainy-night",
+        number: "02",
+        label: { zh: "东京雨夜", ja: "東京、雨の夜", en: "Tokyo in the Rain" },
+        placeholderDescription: {
+          zh: "东京雨夜的照片正在整理。",
+          ja: "「東京、雨の夜」の写真を整理しています。",
+          en: "The Tokyo in the Rain photographs are being prepared.",
+        },
+      },
+    ],
   },
   {
     slug: "kyoto",
@@ -154,10 +229,35 @@ export const chapters: readonly Chapter[] = [
       ja: "京都編の写真を整理しています。",
       en: "The Kyoto photographs are being prepared.",
     },
-    background: "#715448",
-    backgroundDark: "#574037",
+    previews: [
+      { id: "kyoto-01", background: "#715448", backgroundDark: "#574037" },
+      { id: "kyoto-02", background: "#66564a", backgroundDark: "#4d4037" },
+      { id: "kyoto-03", background: "#795e50", backgroundDark: "#5b463c" },
+    ],
+    themes: [
+      {
+        slug: "kyoto-city",
+        number: "01",
+        label: { zh: "京洛漫步", ja: "京洛を歩く", en: "Walking Kyoto" },
+        placeholderDescription: {
+          zh: "京洛漫步的照片正在整理。",
+          ja: "「京洛を歩く」の写真を整理しています。",
+          en: "The Walking Kyoto photographs are being prepared.",
+        },
+      },
+      {
+        slug: "northern-kyoto",
+        number: "02",
+        label: { zh: "洛北幽径", ja: "洛北の山径", en: "Paths of Northern Kyoto" },
+        placeholderDescription: {
+          zh: "洛北幽径的照片正在整理。",
+          ja: "「洛北の山径」の写真を整理しています。",
+          en: "The Paths of Northern Kyoto photographs are being prepared.",
+        },
+      },
+    ],
   },
-] as const;
+] as const satisfies readonly Chapter[];
 
 export const externalLinks = [
   { id: "moriium", label: "Moriium", href: null },
@@ -173,6 +273,15 @@ export function isChapterSlug(value: string | undefined): value is ChapterSlug {
   return chapterSlugs.includes(value as ChapterSlug);
 }
 
-export function routeFor(locale: Locale, chapter?: ChapterSlug): string {
+export function isThemeSlug(value: string | undefined): value is ThemeSlug {
+  return themeSlugs.includes(value as ThemeSlug);
+}
+
+export function routeFor(
+  locale: Locale,
+  chapter?: ChapterSlug,
+  theme?: ThemeSlug,
+): string {
+  if (chapter && theme) return `/${locale}/${chapter}/${theme}/`;
   return chapter ? `/${locale}/${chapter}/` : `/${locale}/`;
 }

@@ -1,0 +1,37 @@
+---
+import {
+  copy,
+  routeFor,
+  type Chapter,
+  type ChapterTheme,
+  type Locale,
+} from "../data/site";
+
+type Props = {
+  locale: Locale;
+  chapter: Chapter;
+  theme: ChapterTheme;
+};
+
+const { locale, chapter, theme } = Astro.props;
+const t = copy[locale];
+const preview = chapter.previews[0];
+---
+
+<section
+  class="theme-placeholder"
+  style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark};`}
+  aria-labelledby="theme-title"
+>
+  <div class="theme-placeholder__field" aria-hidden="true">
+    <span>{chapter.number}.{theme.number}</span>
+  </div>
+  <div class="theme-placeholder__content">
+    <p>{t.photographsPending}</p>
+    <h1 id="theme-title">{theme.label[locale]}</h1>
+    <a href={routeFor(locale, chapter.slug)}>
+      {t.backChapter}
+      <span aria-hidden="true">↗</span>
+    </a>
+  </div>
+</section>

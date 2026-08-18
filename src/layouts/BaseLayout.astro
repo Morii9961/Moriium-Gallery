@@ -8,6 +8,7 @@ import {
   siteTitle,
   type ChapterSlug,
   type Locale,
+  type ThemeSlug,
 } from "../data/site";
 import "../styles/global.css";
 
@@ -16,9 +17,10 @@ type Props = {
   description: string;
   pageTitle?: string;
   currentChapter?: ChapterSlug;
+  currentTheme?: ThemeSlug;
 };
 
-const { locale, description, pageTitle, currentChapter } = Astro.props;
+const { locale, description, pageTitle, currentChapter, currentTheme } = Astro.props;
 const title = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
 ---
 
@@ -30,16 +32,20 @@ const title = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f2efe7" data-theme-color />
+    <meta name="theme-color" content="#e9e3d6" data-theme-color />
     <title>{title}</title>
     {locales.map((alternateLocale) => (
       <link
         rel="alternate"
         hreflang={htmlLanguages[alternateLocale]}
-        href={routeFor(alternateLocale, currentChapter)}
+        href={routeFor(alternateLocale, currentChapter, currentTheme)}
       />
     ))}
-    <link rel="alternate" hreflang="x-default" href={routeFor("zh", currentChapter)} />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={routeFor("zh", currentChapter, currentTheme)}
+    />
     <Font cssVariable="--font-title" preload />
     <script is:inline>
       (() => {
