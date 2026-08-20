@@ -7,6 +7,7 @@ export type ChapterSlug = (typeof chapterSlugs)[number];
 export const themeSlugs = [
   "cloud-fuji",
   "kawaguchiko-festival",
+  "tokyo-shrines-temples",
   "tokyo-views",
   "tokyo-rainy-night",
   "kyoto-city",
@@ -38,7 +39,7 @@ export type Chapter = {
   placeholderLabel: LocalizedText;
   placeholderDescription: LocalizedText;
   previews: readonly [PreviewFrame, PreviewFrame, PreviewFrame];
-  themes: readonly [ChapterTheme, ChapterTheme];
+  themes: readonly ChapterTheme[];
 };
 
 export const siteTitle = "森井永響の日本紀行";
@@ -263,8 +264,18 @@ export const chapters = [
     ],
     themes: [
       {
-        slug: "tokyo-views",
+        slug: "tokyo-shrines-temples",
         number: "01",
+        label: { zh: "东京寺社", ja: "東京の社寺", en: "Tokyo Shrines & Temples" },
+        placeholderDescription: {
+          zh: "东京寺社的照片正在整理。",
+          ja: "「東京の社寺」の写真を整理しています。",
+          en: "The Tokyo Shrines & Temples photographs are being prepared.",
+        },
+      },
+      {
+        slug: "tokyo-views",
+        number: "02",
         label: { zh: "东京展望", ja: "東京を望む", en: "Tokyo from Above" },
         placeholderDescription: {
           zh: "东京展望的照片正在整理。",
@@ -274,7 +285,7 @@ export const chapters = [
       },
       {
         slug: "tokyo-rainy-night",
-        number: "02",
+        number: "03",
         label: { zh: "东京雨夜", ja: "東京、雨の夜", en: "Tokyo in the Rain" },
         placeholderDescription: {
           zh: "东京雨夜的照片正在整理。",

@@ -31,6 +31,7 @@ export type ResolvedGalleryPhoto = GalleryPhoto & {
 export const galleries: Record<ThemeSlug, readonly GalleryPhoto[]> = {
   "cloud-fuji": [],
   "kawaguchiko-festival": [],
+  "tokyo-shrines-temples": [],
   "tokyo-views": [],
   "tokyo-rainy-night": [],
   "kyoto-city": [],
