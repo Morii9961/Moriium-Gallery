@@ -20,7 +20,7 @@ function initializeTheme() {
     const isDark = preference === "dark" || (preference === "system" && media.matches);
     root.dataset.themePreference = preference;
     root.dataset.theme = isDark ? "dark" : "light";
-    themeColor?.setAttribute("content", isDark ? "#242526" : "#e9e3d6");
+    themeColor?.setAttribute("content", isDark ? "#1f2021" : "#e9e3d6");
     buttons.forEach((button) => {
       button.setAttribute(
         "aria-pressed",
@@ -94,6 +94,7 @@ function initializeLanguageSwitcher() {
     link.addEventListener("click", () => {
       const locale = link.dataset.localeLink;
       if (!locale) return;
+      link.hash = window.location.hash;
       try {
         localStorage.setItem(LOCALE_KEY, locale);
       } catch {}

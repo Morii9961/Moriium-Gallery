@@ -1,6 +1,8 @@
 ---
+import GalleryViewer from "../../../components/GalleryViewer.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import ThemePlaceholder from "../../../components/ThemePlaceholder.astro";
+import { loadGallery } from "../../../data/galleries";
 import {
   chapters,
   copy,
@@ -29,6 +31,8 @@ type Props = {
 };
 
 const { locale, chapter, theme } = Astro.props;
+const photos = await loadGallery(theme.slug);
+const hasPhotos = photos.length > 0;
 ---
 
 <BaseLayout
@@ -36,16 +40,22 @@ const { locale, chapter, theme } = Astro.props;
   currentChapter={chapter.slug}
   currentTheme={theme.slug}
   pageTitle={`${theme.label[locale]} · ${chapter.label[locale]}`}
-  description={`${theme.placeholderDescription[locale]} ${copy[locale].description}`}
+  description={hasPhotos
+    ? `${theme.label[locale]}。${copy[locale].description}`
+    : `${theme.placeholderDescription[locale]} ${copy[locale].description}`}
 >
-  <div class="page-shell page-shell--theme">
+  <div class:list={["page-shell", hasPhotos ? "page-shell--gallery" : "page-shell--theme"]}>
     <SiteHeader
       locale={locale}
       currentChapter={chapter.slug}
       currentTheme={theme.slug}
     />
-    <main id="main-content" class="chapter-main">
-      <ThemePlaceholder locale={locale} chapter={chapter} theme={theme} />
+    <main id="main-content" class:list={["chapter-main", hasPhotos && "gallery-main"]}>
+      {hasPhotos ? (
+        <GalleryViewer locale={locale} chapter={chapter} theme={theme} photos={photos} />
+      ) : (
+        <ThemePlaceholder locale={locale} chapter={chapter} theme={theme} />
+      )}
     </main>
   </div>
 </BaseLayout>

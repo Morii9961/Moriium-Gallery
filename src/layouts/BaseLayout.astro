@@ -59,6 +59,10 @@ const title = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
           (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.dataset.themePreference = preference;
         document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.querySelector("[data-theme-color]")?.setAttribute(
+          "content",
+          dark ? "#1f2021" : "#e9e3d6",
+        );
       })();
     </script>
   </head>

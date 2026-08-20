@@ -1,2 +1,10 @@
 allowBuilds:
   esbuild: true
+
+# Keep pnpm's dependency layout local and consistent across installs and script runs.
+enableGlobalVirtualStore: false
+
+# Astro's optional Sharp image service must be visible at the workspace root
+# when pnpm uses its strict isolated linker.
+publicHoistPattern:
+  - sharp
