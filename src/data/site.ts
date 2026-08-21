@@ -283,9 +283,33 @@ export const chapters = [
       en: "The Tokyo photographs are being prepared.",
     },
     previews: [
-      { id: "tokyo-01", background: "#55585d", backgroundDark: "#3f4247" },
-      { id: "tokyo-02", background: "#4f5961", backgroundDark: "#3a444b" },
-      { id: "tokyo-03", background: "#615a5d", backgroundDark: "#484144" },
+      {
+        id: "tokyo-01",
+        background: "#55585d",
+        backgroundDark: "#3f4247",
+        homePhotoId: "tokyo-views-001",
+        chapterPhotoId: "tokyo-views-002",
+        homePosition: "50% 47%",
+        chapterPosition: "50% 52%",
+      },
+      {
+        id: "tokyo-02",
+        background: "#4f5961",
+        backgroundDark: "#3a444b",
+        homePhotoId: "tokyo-views-012",
+        chapterPhotoId: "tokyo-views-003",
+        homePosition: "50% 48%",
+        chapterPosition: "50% 50%",
+      },
+      {
+        id: "tokyo-03",
+        background: "#615a5d",
+        backgroundDark: "#484144",
+        homePhotoId: "tokyo-views-005",
+        chapterPhotoId: "tokyo-views-011",
+        homePosition: "50% 54%",
+        chapterPosition: "50% 50%",
+      },
     ],
     themes: [
       {
