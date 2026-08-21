@@ -34,7 +34,6 @@ const preparedPhotos = await Promise.all(
 
     const metadata = [
       photo.title?.[locale] ? [t.title, photo.title[locale]] : null,
-      photo.place?.[locale] ? [t.place, photo.place[locale]] : null,
       photo.capturedOn
         ? [t.capturedOn, formatDate.format(new Date(`${photo.capturedOn}T00:00:00Z`))]
         : null,
@@ -51,7 +50,9 @@ const preparedPhotos = await Promise.all(
 
     // Keep the full-resolution public derivative out of the initial responsive
     // set. It is exposed only through the deferred detail picture below.
-    const viewerWidths = [...new Set([640, 960, 1440, 1920, Math.min(1920, photo.image.width)])]
+    const viewerWidths = [
+      ...new Set([640, 960, 1440, 1920, 2560, 3200, 3840, Math.min(3840, photo.image.width)]),
+    ]
       .filter((width) => width <= photo.image.width)
       .sort((a, b) => a - b);
     const overviewWidths = [...new Set([240, 480, 720, 960, Math.min(960, photo.image.width)])]

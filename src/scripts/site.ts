@@ -3,7 +3,7 @@ import type { ThemePreference } from "../data/site";
 const THEME_KEY = "moriium-theme";
 const LOCALE_KEY = "moriium-locale";
 
-function initializeTheme() {
+function initializeTheme(signal: AbortSignal) {
   const root = document.documentElement;
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const buttons = Array.from(
@@ -38,17 +38,17 @@ function initializeTheme() {
     button.addEventListener("click", () => {
       const preference = button.dataset.themeChoice as ThemePreference;
       apply(preference, true);
-    });
+    }, { signal });
   });
 
   media.addEventListener("change", () => {
     if (readPreference() === "system") apply("system");
-  });
+  }, { signal });
 
   apply(readPreference());
 }
 
-function initializeMenu() {
+function initializeMenu(signal: AbortSignal) {
   const dialog = document.querySelector<HTMLDialogElement>("[data-site-menu]");
   const openButton = document.querySelector<HTMLButtonElement>("[data-menu-open]");
   const closeButton = dialog?.querySelector<HTMLButtonElement>("[data-menu-close]");
@@ -59,20 +59,20 @@ function initializeMenu() {
     document.body.dataset.menuOpen = "true";
     openButton.setAttribute("aria-expanded", "true");
     closeButton.focus();
-  });
+  }, { signal });
 
-  const close = () => {
-    dialog.close();
+  const close = (restoreFocus = true) => {
+    if (dialog.open) dialog.close();
     delete document.body.dataset.menuOpen;
     openButton.setAttribute("aria-expanded", "false");
-    openButton.focus();
+    if (restoreFocus) openButton.focus();
   };
 
-  closeButton.addEventListener("click", close);
+  closeButton.addEventListener("click", () => close(), { signal });
   dialog.addEventListener("close", () => {
     delete document.body.dataset.menuOpen;
     openButton.setAttribute("aria-expanded", "false");
-  });
+  }, { signal });
   dialog.addEventListener("click", (event) => {
     const panel = dialog.querySelector<HTMLElement>(".menu-dialog__panel");
     if (!panel) return;
@@ -83,10 +83,13 @@ function initializeMenu() {
       event.clientY < bounds.top ||
       event.clientY > bounds.bottom;
     if (outside) close();
+  }, { signal });
+  dialog.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+    link.addEventListener("click", () => close(false), { signal });
   });
 }
 
-function initializeLanguageSwitcher() {
+function initializeLanguageSwitcher(signal: AbortSignal) {
   const switcher = document.querySelector<HTMLDetailsElement>("[data-language-switcher]");
   const links = document.querySelectorAll<HTMLAnchorElement>("[data-locale-link]");
 
@@ -98,22 +101,22 @@ function initializeLanguageSwitcher() {
       try {
         localStorage.setItem(LOCALE_KEY, locale);
       } catch {}
-    });
+    }, { signal });
   });
 
   if (!switcher) return;
   document.addEventListener("click", (event) => {
     if (!switcher.contains(event.target as Node)) switcher.removeAttribute("open");
-  });
+  }, { signal });
   switcher.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       switcher.removeAttribute("open");
       switcher.querySelector<HTMLElement>("summary")?.focus();
     }
-  });
+  }, { signal });
 }
 
-function initializeCarousel(carousel: HTMLElement) {
+function initializeCarousel(carousel: HTMLElement, signal: AbortSignal) {
   const slides = Array.from(
     carousel.querySelectorAll<HTMLElement>("[data-carousel-slide]"),
   );
@@ -193,47 +196,90 @@ function initializeCarousel(carousel: HTMLElement) {
       );
       if (firstSlide >= 0) setActive(firstSlide);
     };
-    link.addEventListener("pointerenter", previewGroup);
-    link.addEventListener("focus", previewGroup);
+    link.addEventListener("pointerenter", previewGroup, { signal });
+    link.addEventListener("focus", previewGroup, { signal });
   });
 
   toggle?.addEventListener("click", () => {
     userPaused = !userPaused;
     syncToggle();
     startTimer();
-  });
+  }, { signal });
 
   carousel.addEventListener("pointerenter", () => {
     pointerPaused = true;
     startTimer();
-  });
+  }, { signal });
   carousel.addEventListener("pointerleave", () => {
     pointerPaused = false;
     startTimer();
-  });
+  }, { signal });
   carousel.addEventListener("focusin", () => {
     focusPaused = true;
     startTimer();
-  });
+  }, { signal });
   carousel.addEventListener("focusout", (event) => {
     if (carousel.contains(event.relatedTarget as Node | null)) return;
     focusPaused = false;
     startTimer();
-  });
+  }, { signal });
 
   reducedMotion.addEventListener("change", () => {
     if (reducedMotion.matches) userPaused = true;
     syncToggle();
     startTimer();
-  });
+  }, { signal });
 
-  document.addEventListener("visibilitychange", startTimer);
+  document.addEventListener("visibilitychange", startTimer, { signal });
+  signal.addEventListener("abort", stopTimer, { once: true });
   setActive(0);
   syncToggle();
   startTimer();
 }
 
-initializeTheme();
-initializeMenu();
-initializeLanguageSwitcher();
-document.querySelectorAll<HTMLElement>("[data-carousel]").forEach(initializeCarousel);
+function initializeControlFeedback(signal: AbortSignal) {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const animations = new WeakMap<HTMLElement, Animation>();
+
+  const play = (target: EventTarget | null) => {
+    if (reducedMotion.matches || !(target instanceof Element)) return;
+    const control = target.closest<HTMLElement>("button, summary");
+    if (!control || (control instanceof HTMLButtonElement && control.disabled)) return;
+    animations.get(control)?.cancel();
+    animations.set(
+      control,
+      control.animate(
+        [
+          { transform: "translateY(0) scale(1)" },
+          { transform: "translateY(1px) scale(0.975)", offset: 0.38 },
+          { transform: "translateY(0) scale(1)" },
+        ],
+        { duration: 180, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      ),
+    );
+  };
+
+  document.addEventListener("pointerdown", (event) => play(event.target), { signal });
+  document.addEventListener("click", (event) => {
+    if (event.detail === 0) play(event.target);
+  }, { signal });
+}
+
+let pageController: AbortController | undefined;
+
+function initializePage() {
+  pageController?.abort();
+  pageController = new AbortController();
+  const { signal } = pageController;
+  initializeTheme(signal);
+  initializeMenu(signal);
+  initializeLanguageSwitcher(signal);
+  initializeControlFeedback(signal);
+  document
+    .querySelectorAll<HTMLElement>("[data-carousel]")
+    .forEach((carousel) => initializeCarousel(carousel, signal));
+}
+
+// ClientRouter keeps bundled modules alive, so initialize each swapped DOM here.
+// Source: https://docs.astro.build/en/guides/view-transitions/#astropage-load
+document.addEventListener("astro:page-load", initializePage);

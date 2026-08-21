@@ -1,12 +1,36 @@
 ---
+import { Picture } from "astro:assets";
 import CarouselControls from "./CarouselControls.astro";
-import { chapters, copy, routeFor, siteTitle, type Locale } from "../data/site";
+import { loadGalleryPhoto } from "../data/galleries";
+import {
+  chapters,
+  copy,
+  routeFor,
+  siteTitle,
+  type Locale,
+  type PreviewFrame,
+} from "../data/site";
 
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const t = copy[locale];
-const slides = chapters.flatMap((chapter) =>
-  chapter.previews.map((preview, previewIndex) => ({ chapter, preview, previewIndex })),
+const slides = await Promise.all(
+  chapters
+    .flatMap((chapter) =>
+      chapter.previews.map((preview, previewIndex) => ({ chapter, preview, previewIndex })),
+    )
+    .map(async (slide) => {
+      const preview: PreviewFrame = slide.preview;
+      const photo = preview.homePhotoId
+        ? await loadGalleryPhoto(preview.homePhotoId)
+        : undefined;
+      const widths = photo
+        ? [...new Set([640, 960, 1440, 1920, 2560, 3200, 3840])]
+            .filter((width) => width <= photo.image.width)
+            .sort((a, b) => a - b)
+        : [];
+      return { ...slide, preview, photo, widths };
+    }),
 );
 ---
 
@@ -20,7 +44,7 @@ const slides = chapters.flatMap((chapter) =>
   data-cycle-duration="3000"
 >
   <div class="home-hero__slides" aria-live="off">
-    {slides.map(({ chapter, preview, previewIndex }, index) => (
+    {slides.map(({ chapter, preview, previewIndex, photo, widths }, index) => (
       <div
         class="home-hero__slide"
         data-carousel-slide
@@ -29,15 +53,32 @@ const slides = chapters.flatMap((chapter) =>
         role="group"
         aria-label={`${index + 1} / ${slides.length}`}
         aria-hidden={index === 0 ? "false" : "true"}
-        style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark};`}
+        style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark}; --preview-position: ${preview.homePosition ?? "50% 50%"};`}
       >
+        {photo && (
+          <Picture
+            src={photo.image}
+            formats={["avif", "webp"]}
+            fallbackFormat="jpg"
+            widths={widths}
+            sizes="100vw"
+            quality="high"
+            alt={photo.alt[locale]}
+            priority={index === 0}
+            loading={index === 0 ? "eager" : "lazy"}
+            draggable={false}
+            class="home-hero__image"
+            pictureAttributes={{ class: "home-hero__picture" }}
+          />
+        )}
         <div class="home-hero__rule" aria-hidden="true"></div>
         <p class="home-hero__place" lang={locale}>
           <span>{chapter.number}</span>
           <span>{chapter.placeholderLabel[locale]}</span>
         </p>
         <p class="home-hero__pending">
-          {t.photographPending}<span aria-hidden="true"> · </span>{String(previewIndex + 1).padStart(2, "0")} / 03
+          {!photo && <>{t.photographPending}<span aria-hidden="true"> · </span></>}
+          {String(previewIndex + 1).padStart(2, "0")} / 03
         </p>
       </div>
     ))}

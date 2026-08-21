@@ -1,5 +1,7 @@
 ---
+import { Picture } from "astro:assets";
 import CarouselControls from "./CarouselControls.astro";
+import { loadGalleryPhoto } from "../data/galleries";
 import { copy, routeFor, siteTitle, type Chapter, type Locale } from "../data/site";
 
 type Props = {
@@ -9,6 +11,19 @@ type Props = {
 
 const { locale, chapter } = Astro.props;
 const t = copy[locale];
+const previews = await Promise.all(
+  chapter.previews.map(async (preview) => {
+    const photo = preview.chapterPhotoId
+      ? await loadGalleryPhoto(preview.chapterPhotoId)
+      : undefined;
+    const widths = photo
+      ? [...new Set([480, 720, 960, 1440, 1920, 2560, 3200, 3840])]
+          .filter((width) => width <= photo.image.width)
+          .sort((a, b) => a - b)
+      : [];
+    return { ...preview, photo, widths };
+  }),
+);
 ---
 
 <section
@@ -22,16 +37,33 @@ const t = copy[locale];
 >
   <div class="chapter-landing__visual">
     <div class="chapter-landing__slides" aria-live="off">
-      {chapter.previews.map((preview, index) => (
+      {previews.map((preview, index) => (
         <div
           class="chapter-landing__slide"
           data-carousel-slide
           data-slide-index={index}
           role="group"
-          aria-label={`${index + 1} / ${chapter.previews.length}`}
+          aria-label={`${index + 1} / ${previews.length}`}
           aria-hidden={index === 0 ? "false" : "true"}
-          style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark};`}
-        ></div>
+          style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark}; --preview-position: ${preview.chapterPosition ?? "50% 50%"};`}
+        >
+          {preview.photo && (
+            <Picture
+              src={preview.photo.image}
+              formats={["avif", "webp"]}
+              fallbackFormat="jpg"
+              widths={preview.widths}
+              sizes="(max-width: 760px) 100vw, 42vw"
+              quality="high"
+              alt={preview.photo.alt[locale]}
+              priority={index === 0}
+              loading={index === 0 ? "eager" : "lazy"}
+              draggable={false}
+              class="chapter-landing__image"
+              pictureAttributes={{ class: "chapter-landing__picture" }}
+            />
+          )}
+        </div>
       ))}
     </div>
 
@@ -39,7 +71,8 @@ const t = copy[locale];
     <p class="chapter-landing__number" aria-hidden="true">{chapter.number}</p>
     <p class="chapter-landing__place" aria-hidden="true">{chapter.placeholderLabel[locale]}</p>
     <p class="chapter-landing__pending">
-      {t.photographPending}<span aria-hidden="true"> · </span><span data-chapter-frame-number>01</span> / 03
+      {!previews[0].photo && <>{t.photographPending}<span aria-hidden="true"> · </span></>}
+      <span data-chapter-frame-number>01</span> / 03
     </p>
     <CarouselControls locale={locale} />
   </div>

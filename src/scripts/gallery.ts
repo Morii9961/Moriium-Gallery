@@ -1,6 +1,6 @@
 type Point = { x: number; y: number };
 
-function initializeGallery(gallery: HTMLElement) {
+function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
   const slides = Array.from(gallery.querySelectorAll<HTMLElement>("[data-gallery-photo]"));
   const infoPages = Array.from(
     gallery.querySelectorAll<HTMLElement>("[data-gallery-info-page]"),
@@ -56,6 +56,7 @@ function initializeGallery(gallery: HTMLElement) {
   const closeOverviewLabel = gallery.dataset.closeOverviewLabel || "Close overview";
   const openInfoLabel = gallery.dataset.openInfoLabel || "Photograph information";
   const closeInfoLabel = gallery.dataset.closeInfoLabel || "Close information";
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   let active = 0;
   let overviewOpen = false;
@@ -81,8 +82,13 @@ function initializeGallery(gallery: HTMLElement) {
   let mouseFallbackStart:
     | { x: number; y: number; panX: number; panY: number }
     | undefined;
+  let photoAnimations: Animation[] = [];
+  let photoTransitionId = 0;
+  let infoAnimation: Animation | undefined;
 
   const activeSlide = () => slides[active];
+  const activeDetailViewport = () =>
+    activeSlide().querySelector<HTMLElement>("[data-gallery-detail]");
   const activeDetailImage = () =>
     activeSlide().querySelector<HTMLImageElement>("[data-gallery-detail-image]");
 
@@ -99,15 +105,24 @@ function initializeGallery(gallery: HTMLElement) {
     const slide = activeSlide();
     const width = Number(slide.dataset.imageWidth || "1");
     const height = Number(slide.dataset.imageHeight || "1");
-    const bounds = stage.getBoundingClientRect();
+    const bounds = activeDetailViewport()?.getBoundingClientRect() ?? stage.getBoundingClientRect();
     return Math.min(bounds.width / width, bounds.height / height, 1);
+  };
+
+  // Map one image pixel to one physical display pixel. devicePixelRatio
+  // includes both operating-system display scaling and browser zoom.
+  const getActualScale = () => Math.min(1, 1 / Math.max(1, window.devicePixelRatio || 1));
+
+  const getScaleBounds = () => {
+    const minimum = getFitScale();
+    return { minimum, maximum: Math.max(minimum, getActualScale()) };
   };
 
   const clampPan = () => {
     const slide = activeSlide();
     const width = Number(slide.dataset.imageWidth || "1") * scale;
     const height = Number(slide.dataset.imageHeight || "1") * scale;
-    const bounds = stage.getBoundingClientRect();
+    const bounds = activeDetailViewport()?.getBoundingClientRect() ?? stage.getBoundingClientRect();
     const maxX = Math.max(0, (width - bounds.width) / 2);
     const maxY = Math.max(0, (height - bounds.height) / 2);
     panX = Math.max(-maxX, Math.min(maxX, panX));
@@ -117,6 +132,8 @@ function initializeGallery(gallery: HTMLElement) {
   const applyTransform = () => {
     const image = activeDetailImage();
     if (!image) return;
+    const { minimum, maximum } = getScaleBounds();
+    scale = Math.max(minimum, Math.min(maximum, scale));
     clampPan();
     image.style.transform =
       `translate(-50%, -50%) translate(${panX}px, ${panY}px) scale(${scale})`;
@@ -141,7 +158,7 @@ function initializeGallery(gallery: HTMLElement) {
     gallery.dataset.zoom = detailMode ? "actual" : "fit";
   };
 
-  const resetDetail = () => {
+  const resetDetail = (animate = false) => {
     const slide = activeSlide();
     const fit = slide.querySelector<HTMLElement>(".gallery-photo__fit");
     const detail = slide.querySelector<HTMLElement>("[data-gallery-detail]");
@@ -157,9 +174,18 @@ function initializeGallery(gallery: HTMLElement) {
     gestureStart = undefined;
     mouseFallbackStart = undefined;
     syncZoomButton();
+    if (animate && fit && !fit.hidden && !reducedMotion.matches) {
+      fit.animate(
+        [
+          { opacity: 0, transform: "scale(0.99)" },
+          { opacity: 1, transform: "scale(1)" },
+        ],
+        { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
   };
 
-  const activateDetail = () => {
+  const activateDetail = (animate = false) => {
     const slide = activeSlide();
     const fit = slide.querySelector<HTMLElement>(".gallery-photo__fit");
     const detail = slide.querySelector<HTMLElement>("[data-gallery-detail]");
@@ -168,23 +194,32 @@ function initializeGallery(gallery: HTMLElement) {
     fit.hidden = true;
     detail.hidden = false;
     detailMode = true;
-    scale = 1;
+    scale = getScaleBounds().maximum;
     panX = 0;
     panY = 0;
     syncZoomButton();
     requestAnimationFrame(applyTransform);
+    if (animate && !reducedMotion.matches) {
+      detail.animate(
+        [
+          { opacity: 0, transform: "scale(0.99)" },
+          { opacity: 1, transform: "scale(1)" },
+        ],
+        { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
   };
 
   const toggleDetail = () => {
     if (overviewOpen) return;
-    if (detailMode) resetDetail();
-    else activateDetail();
+    if (detailMode) resetDetail(true);
+    else activateDetail(true);
   };
 
   const setScaleAround = (nextScale: number, clientX: number, clientY: number) => {
-    const minimum = getFitScale();
-    const bounded = Math.max(minimum, Math.min(1, nextScale));
-    const bounds = stage.getBoundingClientRect();
+    const { minimum, maximum } = getScaleBounds();
+    const bounded = Math.max(minimum, Math.min(maximum, nextScale));
+    const bounds = activeDetailViewport()?.getBoundingClientRect() ?? stage.getBoundingClientRect();
     const pointX = clientX - (bounds.left + bounds.width / 2);
     const pointY = clientY - (bounds.top + bounds.height / 2);
     const imagePointX = (pointX - panX) / scale;
@@ -195,9 +230,37 @@ function initializeGallery(gallery: HTMLElement) {
     applyTransform();
   };
 
-  const setInfoOpen = (open: boolean, restoreFocus = false) => {
+  const setInfoOpen = (open: boolean, restoreFocus = false, animate = true) => {
+    infoAnimation?.cancel();
     infoOpen = open && !overviewOpen;
-    info.hidden = !infoOpen;
+    if (infoOpen) {
+      info.hidden = false;
+      if (animate && !reducedMotion.matches) {
+        infoAnimation = info.animate(
+          [
+            { opacity: 0, transform: "translateX(1rem)" },
+            { opacity: 1, transform: "translateX(0)" },
+          ],
+          { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        );
+      }
+    } else if (!info.hidden && animate && !reducedMotion.matches) {
+      const animation = info.animate(
+        [
+          { opacity: 1, transform: "translateX(0)" },
+          { opacity: 0, transform: "translateX(0.75rem)" },
+        ],
+        { duration: 160, easing: "cubic-bezier(0.4, 0, 1, 1)" },
+      );
+      infoAnimation = animation;
+      void animation.finished
+        .then(() => {
+          if (!infoOpen && infoAnimation === animation) info.hidden = true;
+        })
+        .catch(() => undefined);
+    } else {
+      info.hidden = true;
+    }
     infoToggle.setAttribute("aria-expanded", String(infoOpen));
     setButtonLabel(infoToggle, infoLabel, infoOpen ? closeInfoLabel : openInfoLabel);
     gallery.dataset.info = infoOpen ? "open" : "closed";
@@ -252,7 +315,7 @@ function initializeGallery(gallery: HTMLElement) {
     overviewGrid.replaceChildren(fragment);
   };
 
-  const setOverviewOpen = (open: boolean, moveFocus = false) => {
+  const setOverviewOpen = (open: boolean, moveFocus = false, animate = false) => {
     overviewOpen = open;
     if (open) {
       setInfoOpen(false);
@@ -260,6 +323,16 @@ function initializeGallery(gallery: HTMLElement) {
     }
     single.hidden = open;
     overview.hidden = !open;
+    const revealedView = open ? overview : single;
+    if (animate && !reducedMotion.matches) {
+      revealedView.animate(
+        [
+          { opacity: 0, transform: open ? "translateY(0.65rem)" : "translateY(-0.4rem)" },
+          { opacity: 1, transform: "translateY(0)" },
+        ],
+        { duration: 360, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
     gallery.dataset.view = open ? "overview" : "single";
     overviewToggle.setAttribute("aria-pressed", String(open));
     setButtonLabel(
@@ -315,20 +388,78 @@ function initializeGallery(gallery: HTMLElement) {
     window.history.replaceState(null, "", nextUrl);
   };
 
-  const setActive = (
-    index: number,
-    options: { updateUrl?: boolean; announce?: boolean } = {},
-  ) => {
-    if (slides.length === 0) return;
-    resetDetail();
-    active = (index + slides.length) % slides.length;
-    gallery.dataset.activeIndex = String(active);
-
+  const settleSlideVisibility = () => {
     slides.forEach((slide, slideIndex) => {
       const isActive = slideIndex === active;
       slide.hidden = !isActive;
       slide.setAttribute("aria-hidden", String(!isActive));
+      slide.style.removeProperty("opacity");
+      slide.style.removeProperty("transform");
     });
+  };
+
+  const cancelPhotoTransition = () => {
+    photoTransitionId += 1;
+    photoAnimations.forEach((animation) => animation.cancel());
+    photoAnimations = [];
+    settleSlideVisibility();
+  };
+
+  const animatePhotoChange = (previous: number, direction: -1 | 1) => {
+    const outgoing = slides[previous];
+    const incoming = slides[active];
+    const transitionId = ++photoTransitionId;
+    outgoing.hidden = false;
+    incoming.hidden = false;
+    outgoing.setAttribute("aria-hidden", "true");
+    incoming.setAttribute("aria-hidden", "false");
+
+    photoAnimations = [
+      outgoing.animate(
+        [
+          { opacity: 1, transform: "translateX(0)" },
+          { opacity: 0, transform: `translateX(${direction * -2.25}%)` },
+        ],
+        { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "both" },
+      ),
+      incoming.animate(
+        [
+          { opacity: 0, transform: `translateX(${direction * 2.25}%) scale(0.995)` },
+          { opacity: 1, transform: "translateX(0) scale(1)" },
+        ],
+        { delay: 55, duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "both" },
+      ),
+    ];
+
+    void Promise.allSettled(photoAnimations.map((animation) => animation.finished)).then(() => {
+      if (transitionId !== photoTransitionId) return;
+      photoAnimations = [];
+      settleSlideVisibility();
+    });
+  };
+
+  const setActive = (
+    index: number,
+    options: { updateUrl?: boolean; announce?: boolean; direction?: -1 | 1; animate?: boolean } = {},
+  ) => {
+    if (slides.length === 0) return;
+    const next = (index + slides.length) % slides.length;
+    const previous = active;
+    const shouldAnimate =
+      next !== previous &&
+      options.animate !== false &&
+      !reducedMotion.matches &&
+      !overviewOpen;
+    cancelPhotoTransition();
+    resetDetail();
+    active = next;
+    gallery.dataset.activeIndex = String(active);
+    if (shouldAnimate) {
+      const direction = options.direction ?? (next > previous ? 1 : -1);
+      animatePhotoChange(previous, direction);
+    } else {
+      settleSlideVisibility();
+    }
     infoPages.forEach((page, pageIndex) => {
       page.hidden = pageIndex !== active;
     });
@@ -355,18 +486,26 @@ function initializeGallery(gallery: HTMLElement) {
     return slides.findIndex((slide) => slide.dataset.photoId === id);
   };
 
-  previousButton.addEventListener("click", () => setActive(active - 1));
-  nextButton.addEventListener("click", () => setActive(active + 1));
-  overviewToggle.addEventListener("click", () => setOverviewOpen(!overviewOpen, true));
-  infoToggle.addEventListener("click", () => setInfoOpen(!infoOpen));
-  infoClose.addEventListener("click", () => setInfoOpen(false, true));
-  zoomToggle.addEventListener("click", toggleDetail);
+  previousButton.addEventListener("click", () => setActive(active - 1, { direction: -1 }), {
+    signal,
+  });
+  nextButton.addEventListener("click", () => setActive(active + 1, { direction: 1 }), {
+    signal,
+  });
+  overviewToggle.addEventListener(
+    "click",
+    () => setOverviewOpen(!overviewOpen, true, true),
+    { signal },
+  );
+  infoToggle.addEventListener("click", () => setInfoOpen(!infoOpen), { signal });
+  infoClose.addEventListener("click", () => setInfoOpen(false, true), { signal });
+  zoomToggle.addEventListener("click", toggleDetail, { signal });
 
   gallery.querySelectorAll<HTMLButtonElement>("[data-gallery-select]").forEach((button) => {
     button.addEventListener("click", () => {
       setActive(Number(button.dataset.gallerySelect || "0"));
-      setOverviewOpen(false, true);
-    });
+      setOverviewOpen(false, true, true);
+    }, { signal });
   });
 
   slides.forEach((slide) => {
@@ -378,16 +517,16 @@ function initializeGallery(gallery: HTMLElement) {
       const fitPicture = fitImage.closest<HTMLElement>(".gallery-photo__fit");
       if (fitPicture) fitPicture.hidden = true;
       if (error) error.hidden = false;
-    });
+    }, { signal });
     fitImage?.addEventListener("load", () => {
       delete slide.dataset.imageError;
       const fitPicture = fitImage.closest<HTMLElement>(".gallery-photo__fit");
       if (fitPicture) fitPicture.hidden = false;
       if (error) error.hidden = true;
-    });
+    }, { signal });
     detailImage?.addEventListener("error", () => {
       if (slide === activeSlide() && detailMode) resetDetail();
-    });
+    }, { signal });
   });
 
   const pointerGeometry = () => {
@@ -439,7 +578,7 @@ function initializeGallery(gallery: HTMLElement) {
     stage.setPointerCapture(event.pointerId);
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     beginGesture();
-  });
+  }, { signal });
 
   stage.addEventListener("pointermove", (event) => {
     if (!detailMode || !pointers.has(event.pointerId) || !gestureStart) return;
@@ -455,22 +594,23 @@ function initializeGallery(gallery: HTMLElement) {
     }
 
     if (pointers.size >= 2 && gestureStart.count >= 2 && gestureStart.distance > 0) {
-      const bounds = stage.getBoundingClientRect();
+      const bounds = activeDetailViewport()?.getBoundingClientRect() ?? stage.getBoundingClientRect();
       const centerX = bounds.left + bounds.width / 2;
       const centerY = bounds.top + bounds.height / 2;
       const imagePointX =
         (gestureStart.centroid.x - centerX - gestureStart.panX) / gestureStart.scale;
       const imagePointY =
         (gestureStart.centroid.y - centerY - gestureStart.panY) / gestureStart.scale;
+      const { minimum, maximum } = getScaleBounds();
       scale = Math.max(
-        getFitScale(),
-        Math.min(1, gestureStart.scale * (geometry.distance / gestureStart.distance)),
+        minimum,
+        Math.min(maximum, gestureStart.scale * (geometry.distance / gestureStart.distance)),
       );
       panX = geometry.centroid.x - centerX - imagePointX * scale;
       panY = geometry.centroid.y - centerY - imagePointY * scale;
       applyTransform();
     }
-  });
+  }, { signal });
 
   const finishPointer = (event: PointerEvent) => {
     if (detailMode) {
@@ -491,30 +631,32 @@ function initializeGallery(gallery: HTMLElement) {
       Math.abs(deltaX) >= threshold &&
       Math.abs(deltaY) < Math.abs(deltaX) * 0.75
     ) {
-      setActive(deltaX < 0 ? active + 1 : active - 1);
+      setActive(deltaX < 0 ? active + 1 : active - 1, {
+        direction: deltaX < 0 ? 1 : -1,
+      });
     }
     swipeStart = undefined;
   };
 
-  stage.addEventListener("pointerup", finishPointer);
-  stage.addEventListener("pointercancel", finishPointer);
-  stage.addEventListener("dragstart", (event) => event.preventDefault());
+  stage.addEventListener("pointerup", finishPointer, { signal });
+  stage.addEventListener("pointercancel", finishPointer, { signal });
+  stage.addEventListener("dragstart", (event) => event.preventDefault(), { signal });
   stage.addEventListener("mousedown", (event) => {
     if (!detailMode || pointers.size > 0) return;
     event.preventDefault();
     mouseFallbackStart = { x: event.clientX, y: event.clientY, panX, panY };
-  });
+  }, { signal });
   stage.addEventListener("mousemove", (event) => {
     if (!detailMode || !mouseFallbackStart || pointers.size > 0) return;
     event.preventDefault();
     panX = mouseFallbackStart.panX + event.clientX - mouseFallbackStart.x;
     panY = mouseFallbackStart.panY + event.clientY - mouseFallbackStart.y;
     applyTransform();
-  });
+  }, { signal });
   window.addEventListener("mouseup", () => {
     mouseFallbackStart = undefined;
-  });
-  stage.addEventListener("dblclick", toggleDetail);
+  }, { signal });
+  stage.addEventListener("dblclick", toggleDetail, { signal });
   stage.addEventListener(
     "wheel",
     (event) => {
@@ -522,7 +664,7 @@ function initializeGallery(gallery: HTMLElement) {
       event.preventDefault();
       setScaleAround(scale * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
     },
-    { passive: false },
+    { passive: false, signal },
   );
 
   document.addEventListener("keydown", (event) => {
@@ -533,7 +675,7 @@ function initializeGallery(gallery: HTMLElement) {
 
     if (event.key === "Escape") {
       if (infoOpen) setInfoOpen(false, true);
-      else if (overviewOpen) setOverviewOpen(false, true);
+      else if (overviewOpen) setOverviewOpen(false, true, true);
       else if (detailMode) resetDetail();
       else return;
       event.preventDefault();
@@ -541,34 +683,54 @@ function initializeGallery(gallery: HTMLElement) {
     }
 
     const key = event.key.toLowerCase();
-    if (key === "g") setOverviewOpen(!overviewOpen, true);
+    if (key === "g") setOverviewOpen(!overviewOpen, true, true);
     else if (key === "i" && !overviewOpen) setInfoOpen(!infoOpen, infoOpen);
     else if (key === "z" && !overviewOpen) toggleDetail();
-    else if (!overviewOpen && event.key === "ArrowLeft") setActive(active - 1);
-    else if (!overviewOpen && event.key === "ArrowRight") setActive(active + 1);
-    else if (!overviewOpen && event.key === "Home") setActive(0);
-    else if (!overviewOpen && event.key === "End") setActive(slides.length - 1);
+    else if (!overviewOpen && event.key === "ArrowLeft") {
+      setActive(active - 1, { direction: -1 });
+    } else if (!overviewOpen && event.key === "ArrowRight") {
+      setActive(active + 1, { direction: 1 });
+    } else if (!overviewOpen && event.key === "Home") setActive(0, { direction: -1 });
+    else if (!overviewOpen && event.key === "End") setActive(slides.length - 1, { direction: 1 });
     else return;
     event.preventDefault();
-  });
+  }, { signal });
 
   window.addEventListener("hashchange", () => {
     const index = indexFromHash();
     if (index >= 0) setActive(index, { updateUrl: false });
-  });
+  }, { signal });
 
   const resizeObserver = new ResizeObserver(() => {
     if (overviewOpen) layoutOverview();
     if (detailMode) applyTransform();
   });
   resizeObserver.observe(gallery);
+  signal.addEventListener("abort", () => {
+    resizeObserver.disconnect();
+    photoAnimations.forEach((animation) => animation.cancel());
+    infoAnimation?.cancel();
+  }, { once: true });
 
   const initialIndex = indexFromHash();
   previousButton.disabled = slides.length === 1;
   nextButton.disabled = slides.length === 1;
-  setInfoOpen(false);
+  setInfoOpen(false, false, false);
   setOverviewOpen(false);
-  setActive(initialIndex >= 0 ? initialIndex : 0, { announce: false });
+  setActive(initialIndex >= 0 ? initialIndex : 0, { announce: false, animate: false });
 }
 
-document.querySelectorAll<HTMLElement>("[data-gallery]").forEach(initializeGallery);
+let galleryController: AbortController | undefined;
+
+function initializeGalleries() {
+  galleryController?.abort();
+  galleryController = new AbortController();
+  const { signal } = galleryController;
+  document
+    .querySelectorAll<HTMLElement>("[data-gallery]")
+    .forEach((gallery) => initializeGallery(gallery, signal));
+}
+
+// Rebind gallery behavior after each ClientRouter navigation.
+// Source: https://docs.astro.build/en/guides/view-transitions/#astropage-load
+document.addEventListener("astro:page-load", initializeGalleries);

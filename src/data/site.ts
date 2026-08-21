@@ -22,6 +22,10 @@ export type PreviewFrame = {
   id: string;
   background: string;
   backgroundDark: string;
+  homePhotoId?: string;
+  chapterPhotoId?: string;
+  homePosition?: string;
+  chapterPosition?: string;
 };
 
 export type ChapterTheme = {
@@ -99,7 +103,6 @@ export const copy = {
     imageUnavailable: "这张照片暂时无法显示",
     overviewHeading: "照片总览",
     title: "标题",
-    place: "地点",
     capturedOn: "拍摄日期",
     camera: "机身",
     lens: "镜头",
@@ -146,7 +149,6 @@ export const copy = {
     imageUnavailable: "この写真は現在表示できません",
     overviewHeading: "写真一覧",
     title: "題名",
-    place: "場所",
     capturedOn: "撮影日",
     camera: "カメラ",
     lens: "レンズ",
@@ -193,7 +195,6 @@ export const copy = {
     imageUnavailable: "This photograph is temporarily unavailable",
     overviewHeading: "Photograph overview",
     title: "Title",
-    place: "Place",
     capturedOn: "Date",
     camera: "Camera",
     lens: "Lens",
@@ -219,9 +220,33 @@ export const chapters = [
       en: "The Fuji photographs are being prepared.",
     },
     previews: [
-      { id: "fuji-01", background: "#66736f", backgroundDark: "#4d5a56" },
-      { id: "fuji-02", background: "#5f6c72", backgroundDark: "#47545a" },
-      { id: "fuji-03", background: "#74736a", backgroundDark: "#59584f" },
+      {
+        id: "fuji-01",
+        background: "#66736f",
+        backgroundDark: "#4d5a56",
+        homePhotoId: "cloud-fuji-002",
+        chapterPhotoId: "cloud-fuji-003",
+        homePosition: "50% 46%",
+        chapterPosition: "50% 50%",
+      },
+      {
+        id: "fuji-02",
+        background: "#5f6c72",
+        backgroundDark: "#47545a",
+        homePhotoId: "kawaguchiko-festival-015",
+        chapterPhotoId: "kawaguchiko-festival-005",
+        homePosition: "50% 44%",
+        chapterPosition: "50% 48%",
+      },
+      {
+        id: "fuji-03",
+        background: "#74736a",
+        backgroundDark: "#59584f",
+        homePhotoId: "kawaguchiko-festival-018",
+        chapterPhotoId: "kawaguchiko-festival-018",
+        homePosition: "50% 44%",
+        chapterPosition: "50% 45%",
+      },
     ],
     themes: [
       {

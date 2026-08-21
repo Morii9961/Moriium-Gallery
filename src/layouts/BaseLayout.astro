@@ -1,5 +1,6 @@
 ---
 import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
 import {
   copy,
   htmlLanguages,
@@ -11,6 +12,7 @@ import {
   type ThemeSlug,
 } from "../data/site";
 import "../styles/global.css";
+import "../styles/motion.css";
 
 type Props = {
   locale: Locale;
@@ -22,6 +24,44 @@ type Props = {
 
 const { locale, description, pageTitle, currentChapter, currentTheme } = Astro.props;
 const title = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
+const pageKind = currentTheme ? "gallery" : currentChapter ? "chapter" : "home";
+const pageMotion = {
+  home: { exit: "300ms", enter: "720ms", delay: "70ms" },
+  chapter: { exit: "280ms", enter: "680ms", delay: "80ms" },
+  gallery: { exit: "260ms", enter: "620ms", delay: "70ms" },
+}[pageKind];
+const pageTransition = {
+  forwards: {
+    old: {
+      name: `moriium-${pageKind}-out-forward`,
+      duration: pageMotion.exit,
+      easing: "cubic-bezier(0.4, 0, 1, 1)",
+      fillMode: "both",
+    },
+    new: {
+      name: `moriium-${pageKind}-in-forward`,
+      delay: pageMotion.delay,
+      duration: pageMotion.enter,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      fillMode: "both",
+    },
+  },
+  backwards: {
+    old: {
+      name: `moriium-${pageKind}-out-backward`,
+      duration: pageMotion.exit,
+      easing: "cubic-bezier(0.4, 0, 1, 1)",
+      fillMode: "both",
+    },
+    new: {
+      name: `moriium-${pageKind}-in-backward`,
+      delay: pageMotion.delay,
+      duration: pageMotion.enter,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      fillMode: "both",
+    },
+  },
+} as const;
 ---
 
 <!doctype html>
@@ -47,28 +87,48 @@ const title = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
       href={routeFor("zh", currentChapter, currentTheme)}
     />
     <Font cssVariable="--font-title" preload />
+    <!-- Site-wide client navigation and transition lifecycle:
+         https://docs.astro.build/en/guides/view-transitions/ -->
+    <ClientRouter />
     <script is:inline>
       (() => {
-        const key = "moriium-theme";
-        let preference = "system";
-        try {
-          const saved = localStorage.getItem(key);
-          if (saved === "light" || saved === "dark" || saved === "system") preference = saved;
-        } catch {}
-        const dark = preference === "dark" ||
-          (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.dataset.themePreference = preference;
-        document.documentElement.dataset.theme = dark ? "dark" : "light";
-        document.querySelector("[data-theme-color]")?.setAttribute(
-          "content",
-          dark ? "#1f2021" : "#e9e3d6",
-        );
+        const applyStoredTheme = () => {
+          const key = "moriium-theme";
+          let preference = "system";
+          try {
+            const saved = localStorage.getItem(key);
+            if (saved === "light" || saved === "dark" || saved === "system") preference = saved;
+          } catch {}
+          const dark = preference === "dark" ||
+            (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.themePreference = preference;
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.querySelector("[data-theme-color]")?.setAttribute(
+            "content",
+            dark ? "#1f2021" : "#e9e3d6",
+          );
+        };
+
+        if (!window["__moriiumThemeTransitionSync"]) {
+          // Apply the saved theme before the transitioned page is painted.
+          // Source: https://docs.astro.build/en/guides/view-transitions/#astroafter-swap
+          document.addEventListener("astro:after-swap", applyStoredTheme);
+          window["__moriiumThemeTransitionSync"] = true;
+        }
+        applyStoredTheme();
       })();
     </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">{copy[locale].skipToContent}</a>
-    <slot />
+    <div
+      class="page-transition"
+      data-page-kind={pageKind}
+      transition:name="moriium-page"
+      transition:animate={pageTransition}
+    >
+      <slot />
+    </div>
     <script>
       import "../scripts/site";
     </script>

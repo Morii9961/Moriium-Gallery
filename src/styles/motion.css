@@ -1,0 +1,178 @@
+@layer base {
+  .page-transition {
+    min-height: 100%;
+  }
+}
+
+@layer components {
+  /* Each route depth keeps the same soft rhythm while borrowing its motion
+     from the page composition: open field, split chapter, framed photograph. */
+  @keyframes moriium-home-out-forward {
+    to {
+      opacity: 0;
+      transform: translateY(-0.35rem) scale(0.99);
+    }
+  }
+
+  @keyframes moriium-home-in-forward {
+    from {
+      opacity: 0;
+      transform: translateY(0.8rem) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-home-out-backward {
+    to {
+      opacity: 0;
+      transform: translateY(0.4rem) scale(1.008);
+    }
+  }
+
+  @keyframes moriium-home-in-backward {
+    from {
+      opacity: 0;
+      transform: translateY(-0.6rem) scale(1.012);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-chapter-out-forward {
+    to {
+      opacity: 0;
+      transform: translateX(-0.8rem) scale(0.997);
+    }
+  }
+
+  @keyframes moriium-chapter-in-forward {
+    from {
+      opacity: 0;
+      transform: translateX(1.8rem) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-chapter-out-backward {
+    to {
+      opacity: 0;
+      transform: translateX(0.8rem) scale(0.997);
+    }
+  }
+
+  @keyframes moriium-chapter-in-backward {
+    from {
+      opacity: 0;
+      transform: translateX(-1.35rem) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-gallery-out-forward {
+    to {
+      opacity: 0;
+      transform: translateY(-0.2rem) scale(0.99);
+    }
+  }
+
+  @keyframes moriium-gallery-in-forward {
+    from {
+      opacity: 0;
+      transform: translateY(0.45rem) scale(1.018);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-gallery-out-backward {
+    to {
+      opacity: 0;
+      transform: translateY(0.25rem) scale(1.01);
+    }
+  }
+
+  @keyframes moriium-gallery-in-backward {
+    from {
+      opacity: 0;
+      transform: translateY(-0.45rem) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-menu-in {
+    from {
+      opacity: 0.35;
+      transform: translateX(2.75rem) scale(0.992);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes moriium-menu-content-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.7rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes moriium-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes moriium-dropdown-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem) scale(0.985);
+      transform-origin: top right;
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transform-origin: top right;
+    }
+  }
+
+  .language-switcher[open] .language-switcher__menu {
+    animation: moriium-dropdown-in var(--motion-fast) var(--motion-ease-out) both;
+  }
+
+  .menu-dialog[open] {
+    animation: moriium-menu-in var(--motion-medium) var(--motion-ease-out) both;
+    transform-origin: right center;
+  }
+
+  .menu-dialog[open]::backdrop {
+    animation: moriium-backdrop-in 420ms ease-out both;
+  }
+
+  .menu-dialog[open] .menu-dialog__body {
+    animation: moriium-menu-content-in 620ms 90ms var(--motion-ease-out) both;
+  }
+
+  .menu-dialog[open] .menu-dialog__footer {
+    animation: moriium-menu-content-in 620ms 150ms var(--motion-ease-out) both;
+  }
+}
