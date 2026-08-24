@@ -395,6 +395,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       slide.setAttribute("aria-hidden", String(!isActive));
       slide.style.removeProperty("opacity");
       slide.style.removeProperty("transform");
+      slide.style.removeProperty("z-index");
     });
   };
 
@@ -413,6 +414,8 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     incoming.hidden = false;
     outgoing.setAttribute("aria-hidden", "true");
     incoming.setAttribute("aria-hidden", "false");
+    outgoing.style.zIndex = "1";
+    incoming.style.zIndex = "2";
 
     photoAnimations = [
       outgoing.animate(
@@ -433,6 +436,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
 
     void Promise.allSettled(photoAnimations.map((animation) => animation.finished)).then(() => {
       if (transitionId !== photoTransitionId) return;
+      photoAnimations.forEach((animation) => animation.cancel());
       photoAnimations = [];
       settleSlideVisibility();
     });

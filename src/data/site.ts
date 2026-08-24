@@ -243,9 +243,9 @@ export const chapters = [
         background: "#74736a",
         backgroundDark: "#59584f",
         homePhotoId: "kawaguchiko-festival-018",
-        chapterPhotoId: "kawaguchiko-festival-018",
+        chapterPhotoId: "kawaguchiko-festival-017",
         homePosition: "50% 44%",
-        chapterPosition: "50% 45%",
+        chapterPosition: "50% 48%",
       },
     ],
     themes: [
