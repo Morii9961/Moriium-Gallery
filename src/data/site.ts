@@ -356,9 +356,27 @@ export const chapters = [
       en: "The Kyoto photographs are being prepared.",
     },
     previews: [
-      { id: "kyoto-01", background: "#715448", backgroundDark: "#574037" },
-      { id: "kyoto-02", background: "#66564a", backgroundDark: "#4d4037" },
-      { id: "kyoto-03", background: "#795e50", backgroundDark: "#5b463c" },
+      {
+        id: "kyoto-01",
+        background: "#603b2e",
+        backgroundDark: "#3f251e",
+        homePhotoId: "kyoto-city-01-dsc9847",
+        chapterPhotoId: "kyoto-city-01-dsc9843",
+      },
+      {
+        id: "kyoto-02",
+        background: "#574e49",
+        backgroundDark: "#37312f",
+        homePhotoId: "kyoto-city-03-dsc0068",
+        chapterPhotoId: "kyoto-city-03-dsc0040",
+      },
+      {
+        id: "kyoto-03",
+        background: "#263d54",
+        backgroundDark: "#172637",
+        homePhotoId: "kyoto-city-04-dsc0247",
+        chapterPhotoId: "kyoto-city-05-dsc0284",
+      },
     ],
     themes: [
       {

@@ -1211,7 +1211,150 @@ export const galleries: Record<ThemeSlug, readonly GalleryPhoto[]> = {
       exposureCompensationEv: "-1",
     },
   ],
-  "kyoto-city": [],
+  "kyoto-city": [
+    // Morii's five input folders define the block order; photographs within
+    // each block have a fixed editorial sequence independent of filenames.
+    // 01 — Fushimi Inari
+    {
+      id: "kyoto-city-01-dsc9847",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9847.jpg",
+      alt: { zh: "朱红鸟居沿弯曲的石路向远处延伸。", ja: "朱色の鳥居が曲がる石畳の道に沿って奥へ続く。", en: "Vermilion torii gates follow a curving stone path into the distance." },
+    },
+    {
+      id: "kyoto-city-01-dsc9942",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9942.jpg",
+      alt: { zh: "神社的朱红屋檐立在大片流云之下。", ja: "神社の朱色の屋根が流れる雲の下に見える。", en: "A shrine's vermilion roof stands beneath a broad sky of drifting clouds." },
+    },
+    {
+      id: "kyoto-city-01-dsc9862",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9862.jpg",
+      alt: { zh: "树林深处，一列列朱红鸟居在阴影间穿行。", ja: "木々の奥で、朱色の鳥居が影の中を連なっている。", en: "Rows of vermilion torii gates wind through a shaded grove." },
+    },
+    {
+      id: "kyoto-city-01-dsc9851",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9851.jpg",
+      alt: { zh: "鸟居框住通向林中小社的石阶。", ja: "鳥居の向こうに、林の中の小さな社へ続く石段が見える。", en: "A torii gate frames stone steps leading to a small shrine among trees." },
+    },
+    {
+      id: "kyoto-city-01-dsc9913",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9913.jpg",
+      alt: { zh: "红色帘幕下，成排小鸟居与供奉物填满神社一角。", ja: "赤い幕の下に、小さな鳥居と奉納品が並ぶ。", en: "Small torii gates and offerings fill a shrine alcove beneath a red curtain." },
+    },
+    {
+      id: "kyoto-city-01-dsc9843",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9843.jpg",
+      alt: { zh: "伏见稻荷大社入口的朱红鸟居挂着金色匾额。", ja: "伏見稲荷大社の入口に立つ朱色の鳥居に、金色の額が掛かる。", en: "A golden plaque hangs from the vermilion entrance gate of Fushimi Inari Shrine." },
+    },
+    {
+      id: "kyoto-city-01-dsc9957",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9957.jpg",
+      alt: { zh: "稻荷狐像守在朱红神社檐角旁，背后是蓝天。", ja: "朱色の社殿の軒先に稲荷狐の像が立ち、背後に青空が広がる。", en: "An Inari fox statue stands beside vermilion shrine eaves against a blue sky." },
+    },
+    {
+      id: "kyoto-city-01-dsc9902",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/01/_DSC9902.jpg",
+      alt: { zh: "行人沿着密集鸟居下的石路向前走。", ja: "人々が連なる鳥居の下の石畳を歩いていく。", en: "Visitors walk along a stone path beneath closely spaced torii gates." },
+    },
+    // 02 — Heian Shrine
+    {
+      id: "kyoto-city-02-dsc9970",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9970.jpg",
+      alt: { zh: "巨大的朱红鸟居横跨街道，立在蓝天下。", ja: "青空の下、大きな朱色の鳥居が通りをまたぐ。", en: "A towering vermilion torii gate spans a city street beneath a blue sky." },
+    },
+    {
+      id: "kyoto-city-02-dsc9998",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9998.jpg",
+      alt: { zh: "绿树与晴空之间，朱红社殿面向宽阔的庭院。", ja: "緑の木々と晴れた空の下、朱色の社殿が広い境内に面する。", en: "A vermilion shrine hall faces a broad courtyard beneath trees and clear sky." },
+    },
+    {
+      id: "kyoto-city-02-dsc9987",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9987.jpg",
+      alt: { zh: "平安神宫的朱红建筑与绿色屋顶映着深色云层。", ja: "平安神宮の朱色の建物と緑の屋根が、暗い雲を背に浮かぶ。", en: "Heian Shrine's vermilion buildings and green roofs stand against dark clouds." },
+    },
+    {
+      id: "kyoto-city-02-dsc9964",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9964.jpg",
+      alt: { zh: "街口的巨大朱红鸟居旁，行人正穿过斑马线。", ja: "大きな朱色の鳥居のそばで、人々が横断歩道を渡る。", en: "Pedestrians cross the street beside a giant vermilion torii gate." },
+    },
+    {
+      id: "kyoto-city-02-dsc9994",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9994.jpg",
+      alt: { zh: "树影铺过神社庭院，朱红建筑围在四周。", ja: "木陰が境内に広がり、朱色の建物が周囲を囲む。", en: "Tree shadows spread across a shrine courtyard enclosed by vermilion buildings." },
+    },
+    {
+      id: "kyoto-city-02-dsc9974",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/02/_DSC9974.jpg",
+      alt: { zh: "平安神宫的朱红大门与绿色瓦顶正对宽阔石阶。", ja: "平安神宮の朱色の門と緑の瓦屋根が、広い石段に面する。", en: "Heian Shrine's vermilion gate and green tiled roof face a broad flight of steps." },
+    },
+    // 03 — Kiyomizu and Higashiyama
+    {
+      id: "kyoto-city-03-dsc0040",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/03/_DSC0040.jpg",
+      alt: { zh: "乌云下，清水寺的木造舞台伸出山坡，游人站满栏边。", ja: "黒い雲の下、清水寺の木造の舞台が斜面に張り出し、多くの人が欄干に立つ。", en: "Visitors line the wooden stage of Kiyomizu-dera as dark clouds gather above the hillside." },
+    },
+    {
+      id: "kyoto-city-03-dsc0072",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/03/_DSC0072.jpg",
+      alt: { zh: "八坂塔越过东山街巷的屋顶，立在阴云下。", ja: "八坂の塔が東山の町家の屋根越しに、曇り空の下へそびえる。", en: "Yasaka Pagoda rises above Higashiyama rooftops beneath a cloudy sky." },
+    },
+    {
+      id: "kyoto-city-03-dsc0126",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/03/_DSC0126.jpg",
+      alt: { zh: "夕阳穿过厚云，把光束洒向京都街道。", ja: "夕日が厚い雲を抜け、京都の通りに光の筋を落とす。", en: "Evening sunbeams break through heavy clouds over a Kyoto street." },
+    },
+    {
+      id: "kyoto-city-03-dsc0068",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/03/_DSC0068.jpg",
+      alt: { zh: "黄昏的东山街道挤满行人，八坂塔立在尽头。", ja: "夕暮れの東山の通りを人々が埋め、奥に八坂の塔が立つ。", en: "Visitors fill a Higashiyama street at dusk, with Yasaka Pagoda at its end." },
+    },
+    {
+      id: "kyoto-city-03-dsc0080",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/03/_DSC0080.jpg",
+      alt: { zh: "游客走过东山两侧店铺之间的石板坡道。", ja: "人々が東山の店々に挟まれた石畳の坂道を歩く。", en: "Visitors walk a stone-paved slope between shops in Higashiyama." },
+    },
+    // 04 — Kamo River
+    {
+      id: "kyoto-city-04-dsc0190",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/04/_DSC0190.jpg",
+      alt: { zh: "暮色中的鸭川映着层层云影，两岸建筑沿河排开。", ja: "夕暮れの鴨川に重なる雲が映り、両岸に建物が並ぶ。", en: "Layers of evening cloud reflect in the Kamo River between its built-up banks." },
+    },
+    {
+      id: "kyoto-city-04-dsc0257",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/04/_DSC0257.jpg",
+      alt: { zh: "入夜后，鸭川岸边的餐馆亮起灯光，倒影落在水面。", ja: "夜の鴨川沿いに店の明かりが灯り、水面に映る。", en: "Riverside restaurants light up after dusk, their reflections falling on the Kamo River." },
+    },
+    {
+      id: "kyoto-city-04-dsc0247",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/04/_DSC0247.jpg",
+      alt: { zh: "蓝调时刻的鸭川延向远处小桥，两岸灯火刚刚亮起。", ja: "青い夕闇の鴨川が遠くの橋へ続き、両岸の明かりが灯り始める。", en: "At blue hour, the Kamo River leads toward a distant bridge as lights come on along its banks." },
+    },
+    // 05 — Night lights
+    {
+      id: "kyoto-city-05-dsc9670",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/05/_DSC9670.jpg",
+      alt: { zh: "夜色里，一道蓝色光带横过远处，点点灯光铺在前景。", ja: "夜の奥に青い光の帯が横切り、手前に小さな明かりが散らばる。", en: "A band of blue light crosses the night scene beyond many small foreground lights." },
+    },
+    {
+      id: "kyoto-city-05-dsc9788",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/05/_DSC9788.jpg",
+      alt: { zh: "一朵发光的白色莲花立在蓝色灯海前。", ja: "光る白い蓮の花が青い明かりの海の手前に浮かぶ。", en: "A glowing white lotus flower stands before a field of blue lights." },
+    },
+    {
+      id: "kyoto-city-05-dsc0284",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/05/_DSC0284.jpg",
+      alt: { zh: "夜里的神社挂满成排白色灯笼，照亮木造门廊。", ja: "夜の神社で白い提灯が幾列にも並び、木造の門を照らす。", en: "Rows of white lanterns illuminate a wooden shrine entrance at night." },
+    },
+    {
+      id: "kyoto-city-05-dsc9771",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/05/_DSC9771.jpg",
+      alt: { zh: "蓝色灯点与白色莲花灯铺满寺院前的夜色。", ja: "青い光点と白い蓮の灯りが、夜の寺院の前に広がる。", en: "Blue lights and white lotus lanterns spread across the grounds beside a temple at night." },
+    },
+    {
+      id: "kyoto-city-05-dsc9833",
+      imagePath: "/src/assets/photos/kyoto/kyoto-city/05/_DSC9833.jpg",
+      alt: { zh: "一盏纸灯笼悬在成排发光的圆形窗格之间。", ja: "紙の提灯が、光る丸窓の列のあいだに吊られる。", en: "A paper lantern hangs amid rows of glowing circular openings." },
+    },
+  ],
   "northern-kyoto": [],
 };
 
