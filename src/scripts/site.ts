@@ -20,7 +20,7 @@ function initializeTheme(signal: AbortSignal) {
     const isDark = preference === "dark" || (preference === "system" && media.matches);
     root.dataset.themePreference = preference;
     root.dataset.theme = isDark ? "dark" : "light";
-    themeColor?.setAttribute("content", isDark ? "#1f2021" : "#e9e3d6");
+    themeColor?.setAttribute("content", isDark ? "#0e1012" : "#eef0ee");
     buttons.forEach((button) => {
       button.setAttribute(
         "aria-pressed",

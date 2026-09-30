@@ -45,16 +45,16 @@
 @layer tokens {
   :root {
     color-scheme: light;
-    --canvas: #e9e3d6;
-    --surface: #f4f0e7;
-    --ink: #332f2b;
-    --muted: #756e65;
-    --line: #b5ac9f;
-    --accent: #79644f;
-    --focus: #4f4034;
-    --paper-shadow: rgb(51 47 43 / 10%);
-    --on-photo: #fffaf1;
-    --on-photo-muted: rgb(255 250 241 / 76%);
+    --canvas: #eef0ee;
+    --surface: #f9faf8;
+    --ink: #15181b;
+    --muted: #5d6368;
+    --line: #c9cecb;
+    --accent: #46535c;
+    --focus: #15181b;
+    --paper-shadow: rgb(21 24 27 / 9%);
+    --on-photo: #fbfbf8;
+    --on-photo-muted: rgb(251 251 248 / 78%);
     --header-height: 3.25rem;
     --page-gutter: clamp(1rem, 3.8vw, 4.75rem);
     --page-block: clamp(0.875rem, 2vw, 2rem);
@@ -66,14 +66,14 @@
 
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --canvas: #1f2021;
-    --surface: #28292a;
-    --ink: #e7e4dc;
-    --muted: #a7a5a0;
-    --line: #555658;
-    --accent: #b6a78f;
-    --focus: #d6c5aa;
-    --paper-shadow: rgb(0 0 0 / 24%);
+    --canvas: #0e1012;
+    --surface: #171a1d;
+    --ink: #e9ebe8;
+    --muted: #979da2;
+    --line: #353a3e;
+    --accent: #aab4bb;
+    --focus: #e9ebe8;
+    --paper-shadow: rgb(0 0 0 / 38%);
   }
 }
 
@@ -309,7 +309,7 @@
   }
 
   .menu-dialog::backdrop {
-    background: rgb(20 15 12 / 48%);
+    background: rgb(10 12 14 / 50%);
     backdrop-filter: blur(2px);
   }
 
@@ -573,8 +573,8 @@
   .home-hero__shade {
     z-index: 1;
     background:
-      linear-gradient(90deg, rgb(25 20 17 / 55%) 0%, rgb(25 20 17 / 18%) 57%, transparent 84%),
-      linear-gradient(0deg, rgb(25 20 17 / 70%) 0%, transparent 58%);
+      linear-gradient(90deg, rgb(8 10 12 / 55%) 0%, rgb(8 10 12 / 18%) 57%, transparent 84%),
+      linear-gradient(0deg, rgb(8 10 12 / 70%) 0%, transparent 58%);
     pointer-events: none;
   }
 
