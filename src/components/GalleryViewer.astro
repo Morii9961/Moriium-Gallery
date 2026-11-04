@@ -1,5 +1,5 @@
 ---
-import { Picture, getImage } from "astro:assets";
+import DeferredPicture from "./DeferredPicture.astro";
 import "../styles/gallery.css";
 import {
   copy,
@@ -23,58 +23,45 @@ const formatDate = new Intl.DateTimeFormat(
   { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" },
 );
 
-const preparedPhotos = await Promise.all(
-  photos.map(async (photo) => {
-    const detailWidth = photo.image.width;
-    const [detailAvif, detailWebp, detailJpeg] = await Promise.all([
-      getImage({ src: photo.image, width: detailWidth, format: "avif", quality: "high" }),
-      getImage({ src: photo.image, width: detailWidth, format: "webp", quality: "high" }),
-      getImage({ src: photo.image, width: detailWidth, format: "jpeg", quality: "high" }),
-    ]);
+const preparedPhotos = photos.map((photo) => {
+  const metadata = [
+    photo.title?.[locale] ? [t.title, photo.title[locale]] : null,
+    photo.capturedOn
+      ? [t.capturedOn, formatDate.format(new Date(`${photo.capturedOn}T00:00:00Z`))]
+      : null,
+    photo.camera ? [t.camera, photo.camera] : null,
+    photo.lens ? [t.lens, photo.lens] : null,
+    photo.focalLengthMm ? [t.focalLength, `${photo.focalLengthMm} mm`] : null,
+    photo.aperture ? [t.aperture, `f/${photo.aperture}`] : null,
+    photo.shutter ? [t.shutter, photo.shutter] : null,
+    photo.iso ? [t.iso, String(photo.iso)] : null,
+    photo.exposureCompensationEv
+      ? [t.exposureCompensation, `${photo.exposureCompensationEv} EV`]
+      : null,
+  ].filter((row): row is [string, string] => row !== null);
 
-    const metadata = [
-      photo.title?.[locale] ? [t.title, photo.title[locale]] : null,
-      photo.capturedOn
-        ? [t.capturedOn, formatDate.format(new Date(`${photo.capturedOn}T00:00:00Z`))]
-        : null,
-      photo.camera ? [t.camera, photo.camera] : null,
-      photo.lens ? [t.lens, photo.lens] : null,
-      photo.focalLengthMm ? [t.focalLength, `${photo.focalLengthMm} mm`] : null,
-      photo.aperture ? [t.aperture, `f/${photo.aperture}`] : null,
-      photo.shutter ? [t.shutter, photo.shutter] : null,
-      photo.iso ? [t.iso, String(photo.iso)] : null,
-      photo.exposureCompensationEv
-        ? [t.exposureCompensation, `${photo.exposureCompensationEv} EV`]
-        : null,
-    ].filter((row): row is [string, string] => row !== null);
+  // Full resolution is loaded only when the viewer opens the detail picture.
+  const viewerWidths = [...new Set([640, 1280, 1920, Math.min(2560, photo.image.width)])]
+    .filter((width) => width <= photo.image.width)
+    .sort((a, b) => a - b);
+  const overviewWidths = [...new Set([320, 640, Math.min(960, photo.image.width)])]
+    .filter((width) => width <= photo.image.width)
+    .sort((a, b) => a - b);
 
-    // Keep the full-resolution public derivative out of the initial responsive
-    // set. It is exposed only through the deferred detail picture below.
-    const viewerWidths = [
-      ...new Set([640, 960, 1440, 1920, 2560, 3200, 3840, Math.min(3840, photo.image.width)]),
-    ]
-      .filter((width) => width <= photo.image.width)
-      .sort((a, b) => a - b);
-    const overviewWidths = [...new Set([240, 480, 720, 960, Math.min(960, photo.image.width)])]
-      .filter((width) => width <= photo.image.width)
-      .sort((a, b) => a - b);
-
-    return {
-      ...photo,
-      detailAvif,
-      detailWebp,
-      detailJpeg,
-      metadata,
-      viewerWidths,
-      overviewWidths,
-      ratio: photo.image.width / photo.image.height,
-    };
-  }),
-);
+  return {
+    ...photo,
+    metadata,
+    viewerWidths,
+    overviewWidths,
+    ratio: photo.image.width / photo.image.height,
+  };
+});
 ---
 
 <section
   class="gallery"
+  data-locale={locale}
+  style={`--active-photo-ratio: ${preparedPhotos[0].ratio};`}
   aria-labelledby="gallery-title"
   data-gallery
   data-active-index="0"
@@ -87,13 +74,13 @@ const preparedPhotos = await Promise.all(
   data-open-info-label={t.photoInformation}
   data-close-info-label={t.closePhotoInformation}
 >
+  <header class="gallery-heading">
+    <p>{chapter.label[locale]}</p>
+    <h1 id="gallery-title">{theme.label[locale]}</h1>
+  </header>
+
   <div class="gallery__body">
     <div class="gallery__single" data-gallery-single>
-      <header class="gallery-heading">
-        <p>{chapter.label[locale]}</p>
-        <h1 id="gallery-title">{theme.label[locale]}</h1>
-      </header>
-
       <div class="gallery-stage" data-gallery-stage>
         {preparedPhotos.map((photo, index) => (
           <figure
@@ -107,9 +94,10 @@ const preparedPhotos = await Promise.all(
             aria-hidden={index === 0 ? "false" : "true"}
             hidden={index !== 0}
           >
-            <Picture
+            <DeferredPicture
+              deferred={index !== 0}
               src={photo.image}
-              formats={["avif", "webp"]}
+              formats={["webp"]}
               fallbackFormat="jpg"
               widths={photo.viewerWidths}
               sizes="100vw"
@@ -123,14 +111,12 @@ const preparedPhotos = await Promise.all(
             />
 
             <picture class="gallery-photo__detail" data-gallery-detail hidden>
-              <source type="image/avif" data-detail-srcset={photo.detailAvif.src} />
-              <source type="image/webp" data-detail-srcset={photo.detailWebp.src} />
               <img
                 alt={photo.alt[locale]}
                 width={photo.image.width}
                 height={photo.image.height}
                 draggable="false"
-                data-detail-src={photo.detailJpeg.src}
+                data-detail-src={photo.image.src}
                 data-gallery-detail-image
               />
             </picture>
@@ -193,8 +179,7 @@ const preparedPhotos = await Promise.all(
     >
       <header class="gallery-overview__header">
         <div>
-          <p>{chapter.label[locale]}</p>
-          <h2 id="gallery-overview-title">{theme.label[locale]}</h2>
+          <h2 id="gallery-overview-title">{t.overviewHeading}</h2>
         </div>
         <p>{preparedPhotos.length} {t.photographs}</p>
       </header>
@@ -213,12 +198,13 @@ const preparedPhotos = await Promise.all(
               aria-label={`${t.photograph} ${index + 1}: ${photo.alt[locale]}`}
               aria-current={index === 0 ? "true" : undefined}
             >
-              <Picture
+              <DeferredPicture
+                deferred={true}
                 src={photo.image}
-                formats={["avif", "webp"]}
+                formats={["webp"]}
                 fallbackFormat="jpg"
                 widths={photo.overviewWidths}
-                sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 alt=""
                 loading="lazy"
                 class="gallery-overview__image"
@@ -257,7 +243,7 @@ const preparedPhotos = await Promise.all(
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
         </svg>
-        <span data-gallery-overview-label>{t.openOverview}</span>
+        <span class="sr-only" data-gallery-overview-label>{t.openOverview}</span>
       </button>
       <button
         type="button"
@@ -270,7 +256,7 @@ const preparedPhotos = await Promise.all(
           <circle cx="12" cy="12" r="8" />
           <path d="M12 11v5M12 8h.01" />
         </svg>
-        <span data-gallery-info-label>{t.photoInformation}</span>
+        <span class="sr-only" data-gallery-info-label>{t.photoInformation}</span>
       </button>
       <button
         type="button"
@@ -281,7 +267,7 @@ const preparedPhotos = await Promise.all(
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9 4H4v5M15 4h5v5M20 15v5h-5M4 15v5h5" />
         </svg>
-        <span data-gallery-zoom-label>{t.viewActualSize}</span>
+        <span class="sr-only" data-gallery-zoom-label>{t.viewActualSize}</span>
       </button>
     </div>
   </footer>

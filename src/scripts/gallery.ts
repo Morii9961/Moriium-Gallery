@@ -1,3 +1,5 @@
+import { hydratePicture } from "./images";
+
 type Point = { x: number; y: number };
 
 function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
@@ -98,6 +100,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     label: string,
   ) => {
     button.setAttribute("aria-label", label);
+    button.title = label;
     visibleLabel.textContent = label;
   };
 
@@ -143,10 +146,6 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     const detail = slide.querySelector<HTMLElement>("[data-gallery-detail]");
     if (!detail || detail.dataset.loaded === "true") return;
 
-    detail.querySelectorAll<HTMLSourceElement>("source[data-detail-srcset]").forEach((source) => {
-      const srcset = source.dataset.detailSrcset;
-      if (srcset) source.srcset = srcset;
-    });
     const image = detail.querySelector<HTMLImageElement>("[data-gallery-detail-image]");
     if (image?.dataset.detailSrc) image.src = image.dataset.detailSrc;
     detail.dataset.loaded = "true";
@@ -273,7 +272,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     if (width <= 0) return;
 
     const gap = width < 640 ? 8 : 12;
-    const targetHeight = width < 520 ? Math.min(180, width * 0.46) : width < 960 ? 190 : 240;
+    const targetHeight = width < 520 ? Math.min(220, width * 0.6) : width < 960 ? 250 : 320;
     const rows: HTMLElement[][] = [];
     let row: HTMLElement[] = [];
     let ratioTotal = 0;
@@ -346,6 +345,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     nextButton.disabled = open || slides.length === 1;
 
     if (open) {
+      overviewItems.forEach((item) => hydratePicture(item));
       requestAnimationFrame(() => {
         layoutOverview();
         if (moveFocus) {
@@ -363,7 +363,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
   const preloadAdjacent = async () => {
     if (slides.length < 2) return;
     const request = ++preloadRequest;
-    const currentImage = activeSlide().querySelector<HTMLImageElement>("[data-gallery-fit-image]");
+    const currentImage = hydratePicture(activeSlide());
     if (currentImage) {
       await currentImage.decode().catch(() => undefined);
       if (request !== preloadRequest) return;
@@ -373,7 +373,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       (active + 1) % slides.length,
     ];
     indexes.forEach((index) => {
-      const image = slides[index].querySelector<HTMLImageElement>("[data-gallery-fit-image]");
+      const image = hydratePicture(slides[index]);
       if (!image) return;
       image.loading = "eager";
       void image.decode().catch(() => undefined);
@@ -421,13 +421,13 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       outgoing.animate(
         [
           { opacity: 1, transform: "translateX(0)" },
-          { opacity: 0, transform: `translateX(${direction * -2.25}%)` },
+          { opacity: 0, transform: `translateX(${direction * 2.25}%)` },
         ],
         { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "both" },
       ),
       incoming.animate(
         [
-          { opacity: 0, transform: `translateX(${direction * 2.25}%) scale(0.995)` },
+          { opacity: 0, transform: `translateX(${direction * -2.25}%) scale(0.995)` },
           { opacity: 1, transform: "translateX(0) scale(1)" },
         ],
         { delay: 55, duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "both" },
@@ -458,6 +458,10 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     resetDetail();
     active = next;
     gallery.dataset.activeIndex = String(active);
+    gallery.style.setProperty(
+      "--active-photo-ratio",
+      String(Number(slides[active].dataset.imageWidth) / Number(slides[active].dataset.imageHeight)),
+    );
     if (shouldAnimate) {
       const direction = options.direction ?? (next > previous ? 1 : -1);
       animatePhotoChange(previous, direction);
@@ -636,7 +640,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       Math.abs(deltaY) < Math.abs(deltaX) * 0.75
     ) {
       setActive(deltaX < 0 ? active + 1 : active - 1, {
-        direction: deltaX < 0 ? 1 : -1,
+        direction: deltaX < 0 ? -1 : 1,
       });
     }
     swipeStart = undefined;
@@ -735,6 +739,6 @@ function initializeGalleries() {
     .forEach((gallery) => initializeGallery(gallery, signal));
 }
 
-// Rebind gallery behavior after each ClientRouter navigation.
-// Source: https://docs.astro.build/en/guides/view-transitions/#astropage-load
-document.addEventListener("astro:page-load", initializeGalleries);
+// Bind controls immediately instead of waiting for the first photograph's load.
+document.addEventListener("astro:after-swap", initializeGalleries);
+initializeGalleries();

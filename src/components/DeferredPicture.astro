@@ -1,0 +1,13 @@
+---
+import { Picture } from "astro:assets";
+import type { ComponentProps } from "astro/types";
+
+type Props = ComponentProps<typeof Picture> & { deferred: boolean };
+const { deferred, ...picture } = Astro.props;
+---
+
+{deferred ? (
+  <template data-deferred-picture><Picture {...picture} /></template>
+) : (
+  <Picture {...picture} />
+)}

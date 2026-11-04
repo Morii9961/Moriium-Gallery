@@ -25,15 +25,17 @@ const t = copy[locale];
 
 <header class="site-header" data-site-header>
   <a class="site-kicker" href={routeFor(locale)} aria-label={`${siteTitle} — ${t.home}`}>
-    <span>JAPAN</span>
-    <span aria-hidden="true">·</span>
-    <span>2026</span>
+    {currentTheme ? (
+      <span class="site-kicker__title" lang="ja">{siteTitle}</span>
+    ) : (
+      <><span>JAPAN</span><span aria-hidden="true">·</span><span>2026</span></>
+    )}
   </a>
 
   <div class="site-header__actions">
     <details class="language-switcher" data-language-switcher>
       <summary aria-label={t.language}>
-        <span aria-hidden="true">{localeShortNames[locale]}</span>
+        <span aria-hidden="true">{currentTheme ? locale.toUpperCase() : localeShortNames[locale]}</span>
         <span class="sr-only">{localeNames[locale]}</span>
         <svg viewBox="0 0 12 8" aria-hidden="true">
           <path d="m1 1.5 5 5 5-5" />

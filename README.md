@@ -28,7 +28,9 @@ Astro 会把全部语言与篇章路由预渲染到 `dist/`，线上不需要 No
 
 ## 当前状态
 
-主页三篇各三帧的占位轮播、三个篇章入口与六个主题占位页构成当前阶段。代表照片、完整摄影集和外部链接将在素材确认后补充。
+核心图库与六个摄影集已有提交，当前进入上线准备；首发内容、部署配置和正式验收情况见 [项目状态](./docs/status/PROJECT_STATUS.md)。后续 MoriMeta 联动单独追踪，不自动阻止 Gallery 独立首发。
+
+在本仓库的 Agent 对话中输入 **「生成项目状态快照」**，按 [使用说明](./docs/status/README.md) 手动更新中文总结与 [JSON 快照](./docs/status/project-status.json)，再由 Morii 手动导入 Moriium Dashboard。快照不会自动刷新，生成过程不运行测试、构建或部署。
 
 ## Copyright
 

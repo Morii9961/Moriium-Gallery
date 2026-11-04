@@ -29,21 +29,35 @@ Do not choose or migrate a framework, add a dependency, or introduce a hosted se
 2. Classify the task, then load the smallest skill set that fully covers it.
 3. Preserve Morii's and the other agent's unrelated changes. Avoid broad rewrites and drive-by formatting.
 4. Implement only the requested behavior. Keep category data in one source of truth and expose it only through the main menu.
-5. Run fresh, task-relevant checks. Review the final diff and status before reporting completion.
+5. Choose focused checks in proportion to scope and risk, reuse still-valid evidence, and inspect the resulting diff before reporting.
 
 Do not commit, push, publish, deploy, open a pull request, or change remote state unless Morii explicitly asks. Destructive operations and public exposure always require explicit approval.
+
+## Code implementation principles
+
+Where these principles conflict with existing design or implementation guidance, follow these principles.
+
+- Keep code in one function unless it needs to be composable or reusable.
+- Validate unknown values once at the boundary that owns them. Pass typed values inward instead of repeating `typeof value === "object"` and property-existence checks. Do not defensively revalidate values already guaranteed by a schema, constructor, or internal type.
+- Do not extract single-use helpers preemptively. Keep logic at the call site unless a helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
+- Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to Morii and get buy-in. Do not silently expand scope for theoretical robustness.
+- Avoid `try`/`catch` where possible.
+
+## Manual project status snapshots
+
+After the initial requested baseline, update `docs/status/PROJECT_STATUS.md` and `docs/status/project-status.json` only when Morii explicitly inputs **生成项目状态快照**. Ordinary development and other tasks must leave both snapshots and their timestamps unchanged.
+
+Follow [docs/status/README.md](./docs/status/README.md) for the manual workflow and Project Status Protocol v1. Reuse existing repository records, keep the Markdown and JSON consistent, and keep `source.tests_rerun` set to `false`. Snapshot generation does not authorize tests, builds, deployment, commits, pushes, online probes, or automatic synchronization. Morii imports the JSON into Moriium Dashboard manually.
+
+Track Gallery launch requirements separately from later MoriMeta integration and optional improvements. Missing MoriMeta integration must not automatically block Gallery's independent first launch. Distinguish agent reports, repository evidence, existing checks, and explicit Morii acceptance; preserve unknown values instead of guessing.
 
 ## Skill routing
 
 Use installed skills selectively. Prefer the smallest set of skills that covers the current task; do not invoke skills merely because they are available. Skills may be combined only when their responsibilities genuinely overlap.
 
 For frontend work:
-
-- Use design skills while making visual or interaction decisions.
-- Use implementation skills while coding.
-- Use review or audit skills while reviewing.
-- Use debugging skills only while diagnosing a real failure or unexpected behavior.
-- Use verification skills before claiming substantial work is complete.
+- Use design or implementation skills only when the corresponding entry below matches a concrete need.
+- Use systematic-debugging only for complex or hard-to-localize failures, repeated unsuccessful fixes, cross-module/service or concurrent-state issues, or when evidence calls for systematic root-cause investigation. Use native debugging for routine local problems.
 
 For writing:
 
@@ -68,9 +82,7 @@ For writing:
 
 | Skill | Invoke when | Do not invoke when |
 | --- | --- | --- |
-| `systematic-debugging` | A bug, failed test/build, regression, or unexplained behavior exists. Reproduce and identify the cause before editing. | Building a requested feature normally or speculating about failures that have not occurred. |
-| `verification-before-completion` | Before claiming a substantial change is complete, fixed, passing, or ready. Run fresh checks and report their actual results. | Pure discussion with no completion claim. Small prose-only replies do not need a project verification run. |
-| `code-review-and-quality` | Morii requests review, a pull request or merge is being prepared, or a risky/substantial diff needs formal multi-axis review. | During ordinary implementation before a review phase, or for a trivial isolated prose edit. |
+| `systematic-debugging` | Complex or hard-to-localize failures, repeated unsuccessful fixes, cross-module/service or concurrent-state issues, or evidence that systematic root-cause investigation is needed. | Routine syntax, local logic, and simple UI issues; use native debugging. |
 
 ### Writing skills
 
@@ -87,8 +99,7 @@ For writing:
 - New or substantially redesigned gallery UI: `frontend-design` + `ui-ux-pro-max`; add `vercel-react-best-practices` only if the chosen stack is React/Next.js.
 - Implement an approved React design: `vercel-react-best-practices`; add `vercel-composition-patterns` only when component API architecture is genuinely involved.
 - UI/accessibility audit: `web-design-guidelines`; add `ui-ux-pro-max` only if the task also asks for redesign decisions.
-- Bug or failed build: `systematic-debugging` first, then the relevant implementation skill, then `verification-before-completion`.
-- Pre-merge or pull-request readiness: `code-review-and-quality` + `verification-before-completion`.
+
 - Technical documentation: `documentation-writer`; add `writing-clearly-and-concisely` for substantive prose polishing, and `doc-coauthoring` only for a genuinely iterative document project.
 
 Skills not listed above are not part of the default project workflow. Invoke one only when Morii explicitly names it or the task unambiguously matches its current description. Do not preload speculative skills.

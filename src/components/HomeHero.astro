@@ -1,5 +1,5 @@
 ---
-import { Picture } from "astro:assets";
+import DeferredPicture from "./DeferredPicture.astro";
 import CarouselControls from "./CarouselControls.astro";
 import { loadGalleryPhoto } from "../data/galleries";
 import {
@@ -25,7 +25,7 @@ const slides = await Promise.all(
         ? await loadGalleryPhoto(preview.homePhotoId)
         : undefined;
       const widths = photo
-        ? [...new Set([640, 960, 1440, 1920, 2560, 3200, 3840])]
+        ? [640, 1280, 1920, 2560, 3840]
             .filter((width) => width <= photo.image.width)
             .sort((a, b) => a - b)
         : [];
@@ -56,16 +56,17 @@ const slides = await Promise.all(
         style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark}; --preview-position: ${preview.homePosition ?? "50% 50%"};`}
       >
         {photo && (
-          <Picture
+          <DeferredPicture
+            deferred={index !== 0}
             src={photo.image}
-            formats={["avif", "webp"]}
+            formats={["webp"]}
             fallbackFormat="jpg"
             widths={widths}
-            sizes="100vw"
+            sizes={`(max-width: 760px) max(100vw, calc((100svh - 6.2rem) * ${photo.image.width / photo.image.height})), 100vw`}
             quality="high"
             alt={photo.alt[locale]}
             priority={index === 0}
-            loading={index === 0 ? "eager" : "lazy"}
+            loading="eager"
             draggable={false}
             class="home-hero__image"
             pictureAttributes={{ class: "home-hero__picture" }}

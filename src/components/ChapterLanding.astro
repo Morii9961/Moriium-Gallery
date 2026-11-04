@@ -1,5 +1,5 @@
 ---
-import { Picture } from "astro:assets";
+import DeferredPicture from "./DeferredPicture.astro";
 import CarouselControls from "./CarouselControls.astro";
 import { loadGalleryPhoto } from "../data/galleries";
 import { copy, routeFor, siteTitle, type Chapter, type Locale } from "../data/site";
@@ -17,7 +17,7 @@ const previews = await Promise.all(
       ? await loadGalleryPhoto(preview.chapterPhotoId)
       : undefined;
     const widths = photo
-      ? [...new Set([480, 720, 960, 1440, 1920, 2560, 3200, 3840])]
+      ? [640, 1280, 1920, 2560, 3840]
           .filter((width) => width <= photo.image.width)
           .sort((a, b) => a - b)
       : [];
@@ -48,16 +48,17 @@ const previews = await Promise.all(
           style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark}; --preview-position: ${preview.chapterPosition ?? "50% 50%"};`}
         >
           {preview.photo && (
-            <Picture
+            <DeferredPicture
+              deferred={index !== 0}
               src={preview.photo.image}
-              formats={["avif", "webp"]}
+              formats={["webp"]}
               fallbackFormat="jpg"
               widths={preview.widths}
-              sizes="(max-width: 760px) 100vw, 42vw"
+              sizes={`(max-width: 760px) max(100vw, ${58 * preview.photo.image.width / preview.photo.image.height}svh), 66vw`}
               quality="high"
               alt={preview.photo.alt[locale]}
               priority={index === 0}
-              loading={index === 0 ? "eager" : "lazy"}
+              loading="eager"
               draggable={false}
               class="chapter-landing__image"
               pictureAttributes={{ class: "chapter-landing__picture" }}

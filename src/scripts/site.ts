@@ -1,4 +1,5 @@
 import type { ThemePreference } from "../data/site";
+import { hydratePicture } from "./images";
 
 const THEME_KEY = "moriium-theme";
 const LOCALE_KEY = "moriium-locale";
@@ -152,6 +153,13 @@ function initializeCarousel(carousel: HTMLElement, signal: AbortSignal) {
     });
 
     const activeSlide = slides[active];
+    const image = hydratePicture(activeSlide);
+    const preloadNext = () => {
+      if (signal.aborted || slides[active] !== activeSlide) return;
+      hydratePicture(slides[(active + 1) % slides.length]);
+    };
+    if (!image || image.complete) preloadNext();
+    else image.addEventListener("load", preloadNext, { once: true, signal });
     const activeGroup = activeSlide.dataset.carouselGroup;
 
     groupLinks.forEach((link) => {
@@ -175,7 +183,10 @@ function initializeCarousel(carousel: HTMLElement, signal: AbortSignal) {
     stopTimer();
     if (userPaused || pointerPaused || focusPaused || document.hidden) return;
     carousel.dataset.cycleState = "running";
-    timer = window.setInterval(() => setActive(active + 1), duration);
+    timer = window.setInterval(() => {
+      const image = hydratePicture(slides[(active + 1) % slides.length]);
+      if (!image || image.complete) setActive(active + 1);
+    }, duration);
   };
 
   const syncToggle = () => {
@@ -280,6 +291,7 @@ function initializePage() {
     .forEach((carousel) => initializeCarousel(carousel, signal));
 }
 
-// ClientRouter keeps bundled modules alive, so initialize each swapped DOM here.
-// Source: https://docs.astro.build/en/guides/view-transitions/#astropage-load
-document.addEventListener("astro:page-load", initializePage);
+// Bind controls before images finish loading, including after a route swap.
+// https://docs.astro.build/en/guides/view-transitions/#astroafter-swap
+document.addEventListener("astro:after-swap", initializePage);
+initializePage();
