@@ -1,8 +1,8 @@
 ---
 import DeferredPicture from "./DeferredPicture.astro";
 import CarouselControls from "./CarouselControls.astro";
-import { loadGalleryPhoto } from "../data/galleries";
-import { copy, routeFor, siteTitle, type Chapter, type Locale } from "../data/site";
+import { galleries, loadGalleryPhoto, themeForPhoto } from "../data/galleries";
+import { copy, routeFor, type Chapter, type Locale } from "../data/site";
 
 type Props = {
   locale: Locale;
@@ -16,12 +16,14 @@ const previews = await Promise.all(
     const photo = preview.chapterPhotoId
       ? await loadGalleryPhoto(preview.chapterPhotoId)
       : undefined;
+    const themeSlug = preview.chapterPhotoId ? themeForPhoto(preview.chapterPhotoId) : undefined;
+    const theme = chapter.themes.find((item) => item.slug === themeSlug);
     const widths = photo
       ? [640, 1280, 1920, 2560, 3840]
           .filter((width) => width <= photo.image.width)
           .sort((a, b) => a - b)
       : [];
-    return { ...preview, photo, widths };
+    return { ...preview, photo, theme, widths };
   }),
 );
 ---
@@ -30,6 +32,7 @@ const previews = await Promise.all(
   class="chapter-landing"
   aria-labelledby="chapter-title"
   aria-roledescription="carousel"
+  data-locale={locale}
   data-carousel
   data-active-slide="0"
   data-cycle-state="running"
@@ -47,14 +50,14 @@ const previews = await Promise.all(
           aria-hidden={index === 0 ? "false" : "true"}
           style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark}; --preview-position: ${preview.chapterPosition ?? "50% 50%"};`}
         >
-          {preview.photo && (
+          {preview.photo ? (
             <DeferredPicture
               deferred={index !== 0}
               src={preview.photo.image}
               formats={["webp"]}
               fallbackFormat="jpg"
               widths={preview.widths}
-              sizes={`(max-width: 760px) max(100vw, ${58 * preview.photo.image.width / preview.photo.image.height}svh), 66vw`}
+              sizes="(max-width: 760px) max(100vw, calc(62svh * 1.5)), 64vw"
               quality="high"
               alt={preview.photo.alt[locale]}
               priority={index === 0}
@@ -63,40 +66,40 @@ const previews = await Promise.all(
               class="chapter-landing__image"
               pictureAttributes={{ class: "chapter-landing__picture" }}
             />
+          ) : (
+            <p class="chapter-landing__caption">{t.photographPending}</p>
+          )}
+          {preview.photo && preview.theme && (
+            <p class="chapter-landing__caption">{preview.theme.label[locale]}</p>
           )}
         </div>
       ))}
     </div>
-
-    <div class="chapter-landing__frame" aria-hidden="true"></div>
-    <p class="chapter-landing__number" aria-hidden="true">{chapter.number}</p>
-    <p class="chapter-landing__place" aria-hidden="true">{chapter.placeholderLabel[locale]}</p>
-    <p class="chapter-landing__pending">
-      {!previews[0].photo && <>{t.photographPending}<span aria-hidden="true"> · </span></>}
-      <span data-chapter-frame-number>01</span> / 03
-    </p>
+    <div class="chapter-landing__shade" aria-hidden="true"></div>
     <CarouselControls locale={locale} />
   </div>
 
   <div class="chapter-landing__content">
-    <p lang="ja">{siteTitle}</p>
     <h1 id="chapter-title">{chapter.label[locale]}</h1>
 
-    <nav class="theme-directory" aria-label={t.chapterThemes}>
-      {chapter.themes.map((theme) => (
-        <a href={routeFor(locale, chapter.slug, theme.slug)}>
-          <span class="theme-directory__number">{theme.number}</span>
-          <span class="theme-directory__label">{theme.label[locale]}</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 17 17 7M9 7h8v8" />
-          </svg>
-        </a>
-      ))}
-    </nav>
+    <div class="chapter-landing__index">
+      <nav class="theme-directory" aria-label={t.chapterThemes}>
+        {chapter.themes.map((theme) => (
+          <a href={routeFor(locale, chapter.slug, theme.slug)}>
+            <span class="theme-directory__label">{theme.label[locale]}</span>
+            <span class="theme-directory__leader" aria-hidden="true"></span>
+            <span class="theme-directory__count">
+              {galleries[theme.slug].length}
+              <span>{t.photoUnit}</span>
+            </span>
+          </a>
+        ))}
+      </nav>
 
-    <a class="chapter-landing__back" href={routeFor(locale)}>
-      {t.backHome}
-      <span aria-hidden="true">↗</span>
-    </a>
+      <a class="chapter-landing__back" href={routeFor(locale)}>
+        <span aria-hidden="true">←</span>
+        {t.backHome}
+      </a>
+    </div>
   </div>
 </section>

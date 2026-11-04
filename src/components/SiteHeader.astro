@@ -21,21 +21,18 @@ type Props = {
 
 const { locale, currentChapter, currentTheme } = Astro.props;
 const t = copy[locale];
+const liveLinks = externalLinks.filter((link) => link.href);
 ---
 
 <header class="site-header" data-site-header>
   <a class="site-kicker" href={routeFor(locale)} aria-label={`${siteTitle} — ${t.home}`}>
-    {currentTheme ? (
-      <span class="site-kicker__title" lang="ja">{siteTitle}</span>
-    ) : (
-      <><span>JAPAN</span><span aria-hidden="true">·</span><span>2026</span></>
-    )}
+    <span class="site-kicker__title" lang="ja">{siteTitle}</span>
   </a>
 
   <div class="site-header__actions">
     <details class="language-switcher" data-language-switcher>
       <summary aria-label={t.language}>
-        <span aria-hidden="true">{currentTheme ? locale.toUpperCase() : localeShortNames[locale]}</span>
+        <span aria-hidden="true">{localeShortNames[locale]}</span>
         <span class="sr-only">{localeNames[locale]}</span>
         <svg viewBox="0 0 12 8" aria-hidden="true">
           <path d="m1 1.5 5 5 5-5" />
@@ -84,35 +81,26 @@ const t = copy[locale];
     <div class="menu-dialog__body">
       <nav class="menu-primary" aria-label={t.chapters}>
         <a href={routeFor(locale)} aria-current={!currentChapter ? "page" : undefined}>
-          <span class="menu-primary__number">00</span>
-          <span>{t.home}</span>
+          {t.home}
         </a>
         {chapters.map((chapter) => (
           <a
             href={routeFor(locale, chapter.slug)}
             aria-current={currentChapter === chapter.slug ? "page" : undefined}
           >
-            <span class="menu-primary__number">{chapter.number}</span>
-            <span>{chapter.menuLabel[locale]}</span>
+            {chapter.label[locale]}
           </a>
         ))}
       </nav>
 
-      <section class="menu-secondary" aria-labelledby="external-heading">
-        <h2 id="external-heading">{t.external}</h2>
-        <div class="menu-secondary__links">
-          {externalLinks.map((link) => (
-            link.href ? (
-              <a href={link.href}>{link.label}</a>
-            ) : (
-              <span class="pending-link" aria-disabled="true">
-                <span>{link.label}</span>
-                <small>{t.comingSoon}</small>
-              </span>
-            )
-          ))}
-        </div>
-      </section>
+      {liveLinks.length > 0 && (
+        <section class="menu-secondary" aria-labelledby="external-heading">
+          <h2 id="external-heading">{t.external}</h2>
+          <div class="menu-secondary__links">
+            {liveLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+          </div>
+        </section>
+      )}
     </div>
 
     <footer class="menu-dialog__footer">

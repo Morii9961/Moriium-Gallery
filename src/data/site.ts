@@ -39,8 +39,6 @@ export type Chapter = {
   slug: ChapterSlug;
   number: string;
   label: LocalizedText;
-  menuLabel: LocalizedText;
-  placeholderLabel: LocalizedText;
   placeholderDescription: LocalizedText;
   previews: readonly [PreviewFrame, PreviewFrame, PreviewFrame];
   themes: readonly ChapterTheme[];
@@ -69,7 +67,7 @@ export const htmlLanguages: Record<Locale, string> = {
 export const copy = {
   zh: {
     intro:
-      "2026年夏，从富士山麓到东京，再到京都。把旅途中驻足的光景，收进富士、东京、京都三个篇章。",
+      "二〇二六年夏，从富士山麓到东京，再到京都。沿途停步时拍下的照片，按地方分作三篇。",
     description: "森井永響在富士、东京与京都拍摄的日本旅行摄影集。",
     menu: "菜单",
     closeMenu: "关闭菜单",
@@ -99,6 +97,7 @@ export const copy = {
     viewActualSize: "查看原尺寸",
     fitPhoto: "适配画面",
     photographs: "张照片",
+    photoUnit: "张",
     photograph: "照片",
     imageUnavailable: "这张照片暂时无法显示",
     overviewHeading: "照片总览",
@@ -115,7 +114,7 @@ export const copy = {
   },
   ja: {
     intro:
-      "2026年夏、富士の麓から東京、そして京都へ。旅の途中で足を止めた光景を、三つの章に分けて収めました。",
+      "二〇二六年の夏、富士の麓から東京へ、そして京都へ。道中で足を止めて撮った写真を、土地ごとに三つの章にまとめました。",
     description: "森井永響が富士、東京、京都で撮影した日本紀行の写真集。",
     menu: "メニュー",
     closeMenu: "メニューを閉じる",
@@ -145,6 +144,7 @@ export const copy = {
     viewActualSize: "原寸で表示",
     fitPhoto: "画面に合わせる",
     photographs: "枚の写真",
+    photoUnit: "枚",
     photograph: "写真",
     imageUnavailable: "この写真は現在表示できません",
     overviewHeading: "写真一覧",
@@ -161,7 +161,7 @@ export const copy = {
   },
   en: {
     intro:
-      "In the summer of 2026, the journey led from the foothills of Fuji to Tokyo and Kyoto. The photographs are gathered here in three chapters.",
+      "Summer 2026, from the foot of Mount Fuji to Tokyo, then on to Kyoto. Photographs taken wherever I stopped along the way, in three chapters.",
     description: "A photographic journey through Fuji, Tokyo, and Kyoto by Morii.",
     menu: "Menu",
     closeMenu: "Close menu",
@@ -191,6 +191,7 @@ export const copy = {
     viewActualSize: "View at actual size",
     fitPhoto: "Fit photograph",
     photographs: "photographs",
+    photoUnit: "photos",
     photograph: "Photograph",
     imageUnavailable: "This photograph is temporarily unavailable",
     overviewHeading: "Photograph overview",
@@ -212,8 +213,6 @@ export const chapters = [
     slug: "fuji",
     number: "01",
     label: { zh: "富士篇", ja: "富士編", en: "Fuji" },
-    menuLabel: { zh: "富士篇", ja: "富士編", en: "Fuji chapter" },
-    placeholderLabel: { zh: "富士山麓", ja: "富士の麓", en: "Fuji foothills" },
     placeholderDescription: {
       zh: "富士篇的照片正在整理。",
       ja: "富士編の写真を整理しています。",
@@ -275,8 +274,6 @@ export const chapters = [
     slug: "tokyo",
     number: "02",
     label: { zh: "东京篇", ja: "東京編", en: "Tokyo" },
-    menuLabel: { zh: "东京篇", ja: "東京編", en: "Tokyo chapter" },
-    placeholderLabel: { zh: "东京街景", ja: "東京の街", en: "Tokyo streets" },
     placeholderDescription: {
       zh: "东京篇的照片正在整理。",
       ja: "東京編の写真を整理しています。",
@@ -297,7 +294,7 @@ export const chapters = [
         background: "#4f5961",
         backgroundDark: "#3a444b",
         homePhotoId: "tokyo-views-012",
-        chapterPhotoId: "tokyo-views-003",
+        chapterPhotoId: "tokyo-shrines-temples-008",
         homePosition: "50% 48%",
         chapterPosition: "50% 50%",
       },
@@ -306,7 +303,7 @@ export const chapters = [
         background: "#615a5d",
         backgroundDark: "#484144",
         homePhotoId: "tokyo-views-005",
-        chapterPhotoId: "tokyo-views-011",
+        chapterPhotoId: "tokyo-rainy-night-dsc9479",
         homePosition: "50% 54%",
         chapterPosition: "50% 50%",
       },
@@ -348,8 +345,6 @@ export const chapters = [
     slug: "kyoto",
     number: "03",
     label: { zh: "京都篇", ja: "京都編", en: "Kyoto" },
-    menuLabel: { zh: "京都篇", ja: "京都編", en: "Kyoto chapter" },
-    placeholderLabel: { zh: "京都旧巷", ja: "京都の路地", en: "Kyoto lanes" },
     placeholderDescription: {
       zh: "京都篇的照片正在整理。",
       ja: "京都編の写真を整理しています。",
@@ -361,21 +356,21 @@ export const chapters = [
         background: "#603b2e",
         backgroundDark: "#3f251e",
         homePhotoId: "kyoto-city-01-dsc9847",
-        chapterPhotoId: "kyoto-city-01-dsc9942",
+        chapterPhotoId: "kyoto-city-03-dsc0072",
       },
       {
         id: "kyoto-02",
         background: "#29402c",
         backgroundDark: "#1b2c1e",
-        homePhotoId: "northern-kyoto-01-dsc0421",
-        chapterPhotoId: "northern-kyoto-02-dsc0474",
+        homePhotoId: "northern-kyoto-02-dsc0474",
+        chapterPhotoId: "northern-kyoto-01-dsc0453",
       },
       {
         id: "kyoto-03",
         background: "#263d54",
         backgroundDark: "#172637",
         homePhotoId: "kyoto-city-04-dsc0247",
-        chapterPhotoId: "kyoto-city-05-dsc0284",
+        chapterPhotoId: "kyoto-city-04-dsc0190",
       },
     ],
     themes: [

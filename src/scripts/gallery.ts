@@ -179,7 +179,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
           { opacity: 0, transform: "scale(0.99)" },
           { opacity: 1, transform: "scale(1)" },
         ],
-        { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { duration: 420, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
       );
     }
   };
@@ -204,7 +204,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
           { opacity: 0, transform: "scale(0.99)" },
           { opacity: 1, transform: "scale(1)" },
         ],
-        { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { duration: 420, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
       );
     }
   };
@@ -240,7 +240,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
             { opacity: 0, transform: "translateX(1rem)" },
             { opacity: 1, transform: "translateX(0)" },
           ],
-          { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+          { duration: 520, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
         );
       }
     } else if (!info.hidden && animate && !reducedMotion.matches) {
@@ -249,7 +249,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
           { opacity: 1, transform: "translateX(0)" },
           { opacity: 0, transform: "translateX(0.75rem)" },
         ],
-        { duration: 160, easing: "cubic-bezier(0.4, 0, 1, 1)" },
+        { duration: 320, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
       );
       infoAnimation = animation;
       void animation.finished
@@ -329,7 +329,7 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
           { opacity: 0, transform: open ? "translateY(0.65rem)" : "translateY(-0.4rem)" },
           { opacity: 1, transform: "translateY(0)" },
         ],
-        { duration: 360, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        { duration: 520, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
       );
     }
     gallery.dataset.view = open ? "overview" : "single";
@@ -421,16 +421,16 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       outgoing.animate(
         [
           { opacity: 1, transform: "translateX(0)" },
-          { opacity: 0, transform: `translateX(${direction * 2.25}%)` },
+          { opacity: 0, transform: `translateX(${direction * 1.25}%)` },
         ],
-        { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "both" },
+        { duration: 520, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "both" },
       ),
       incoming.animate(
         [
-          { opacity: 0, transform: `translateX(${direction * -2.25}%) scale(0.995)` },
+          { opacity: 0, transform: `translateX(${direction * -1.25}%) scale(0.995)` },
           { opacity: 1, transform: "translateX(0) scale(1)" },
         ],
-        { delay: 55, duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "both" },
+        { delay: 120, duration: 820, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "both" },
       ),
     ];
 
@@ -719,6 +719,217 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     photoAnimations.forEach((animation) => animation.cancel());
     infoAnimation?.cancel();
   }, { once: true });
+
+  // The header and the toolbar sit on two frosted plates that appear only
+  // when they are wanted: on arrival, when the pointer goes to the edge where
+  // a plate lives, when the keyboard moves into one, while a panel is open,
+  // or on a tap on touch screens. Looking around the photograph with the
+  // mouse summons nothing.
+  const shell = gallery.closest<HTMLElement>(".page-shell") ?? gallery;
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  const toolbar = gallery.querySelector<HTMLElement>(".gallery-toolbar");
+  type Band = "top" | "bottom";
+  const bands: Record<Band, boolean> = { top: false, bottom: false };
+  const bandTimers: Record<Band, number | undefined> = { top: undefined, bottom: undefined };
+  let arriving = true;
+  let tapped = false;
+  let pointerOverPlate = false;
+  let lastPointerType = "mouse";
+  let idleTimer: number | undefined;
+  let tapTimer: number | undefined;
+  let titleTimer: number | undefined;
+  let arrivalTimer: number | undefined;
+  let renderTimer: number | undefined;
+
+  const setState = (key: string, value: string) => {
+    if (shell.dataset[key] !== value) shell.dataset[key] = value;
+  };
+  const isPanelOpen = () =>
+    overviewOpen ||
+    infoOpen ||
+    document.body.dataset.menuOpen === "true" ||
+    Boolean(document.querySelector("details[open]"));
+  // A button keeps focus after a mouse click; only keyboard focus holds a
+  // plate open, or the plates would never leave after the first click.
+  const holdsKeyboardFocus = (area: HTMLElement | null) => {
+    const focused = document.activeElement;
+    return Boolean(focused && area?.contains(focused) && focused.matches(":focus-visible"));
+  };
+
+  const render = () => {
+    const pinned = arriving || tapped || isPanelOpen();
+    const top = pinned || bands.top || holdsKeyboardFocus(header);
+    const bottom = pinned || bands.bottom || holdsKeyboardFocus(toolbar);
+    setState("chromeTop", top ? "visible" : "hidden");
+    setState("chromeBottom", bottom ? "visible" : "hidden");
+  };
+  // Render after the current event's other handlers (menu, details) have run.
+  const scheduleRender = () => {
+    if (renderTimer !== undefined) return;
+    renderTimer = window.setTimeout(() => {
+      renderTimer = undefined;
+      render();
+    });
+  };
+
+  const setBand = (band: Band, on: boolean) => {
+    if (on) {
+      window.clearTimeout(bandTimers[band]);
+      bandTimers[band] = undefined;
+      if (!bands[band]) {
+        bands[band] = true;
+        scheduleRender();
+      }
+    } else if (bands[band] && bandTimers[band] === undefined) {
+      bandTimers[band] = window.setTimeout(() => {
+        bandTimers[band] = undefined;
+        bands[band] = false;
+        scheduleRender();
+      }, 320);
+    }
+  };
+
+  // Enter a band near the edge, leave it only well clear of the edge, so a
+  // plate does not flicker while the pointer rests on the line.
+  const trackBands = (y: number) => {
+    const height = window.innerHeight;
+    setBand("top", bands.top ? y < Math.max(170, height * 0.22) : y < Math.max(96, height * 0.12));
+    setBand(
+      "bottom",
+      bands.bottom
+        ? y > height - Math.max(190, height * 0.24)
+        : y > height - Math.max(110, height * 0.14),
+    );
+  };
+
+  // Stillness hides the cursor and lets go of a band the pointer has merely
+  // been parked in, but not of a plate the pointer is resting on.
+  const markActive = () => {
+    setState("idle", "false");
+    window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => {
+      setState("idle", "true");
+      if (pointerOverPlate) return;
+      setBand("top", false);
+      setBand("bottom", false);
+    }, 2600);
+  };
+
+  const endArrival = () => {
+    if (!arriving) return;
+    arriving = false;
+    window.clearTimeout(arrivalTimer);
+    scheduleRender();
+  };
+
+  // The title is orientation: shown on arrival and beside the overview, gone
+  // as soon as you start looking through the photographs.
+  const hideTitle = () => {
+    window.clearTimeout(titleTimer);
+    if (!overviewOpen) setState("title", "hidden");
+  };
+  const showTitle = (linger = true) => {
+    setState("title", "shown");
+    window.clearTimeout(titleTimer);
+    if (linger) titleTimer = window.setTimeout(hideTitle, 3200);
+  };
+
+  document.addEventListener("pointermove", (event) => {
+    if (event.pointerType !== "mouse") return;
+    markActive();
+    const target = event.target instanceof Element ? event.target : null;
+    pointerOverPlate = Boolean(target?.closest(".site-header, .gallery-toolbar, .gallery-info"));
+    trackBands(event.clientY);
+  }, { passive: true, signal });
+  document.addEventListener("pointerdown", (event) => {
+    lastPointerType = event.pointerType;
+  }, { passive: true, signal });
+  ["click", "keydown", "focusin", "focusout"].forEach((type) => {
+    document.addEventListener(type, scheduleRender, { passive: true, signal });
+  });
+  document.documentElement.addEventListener("mouseleave", () => {
+    setBand("top", false);
+    setBand("bottom", false);
+  }, { signal });
+
+  // Touch has no edges to reach for: a tap on the photograph toggles both
+  // plates, and they leave by themselves after a while. Swipes do not count.
+  stage.addEventListener("click", () => {
+    if (lastPointerType === "mouse" || detailMode) return;
+    endArrival();
+    tapped = !tapped;
+    window.clearTimeout(tapTimer);
+    if (tapped) {
+      tapTimer = window.setTimeout(() => {
+        tapped = false;
+        scheduleRender();
+      }, 4000);
+    }
+    scheduleRender();
+  }, { signal });
+
+  // A blurred, dimmed copy of the current photograph fills the darkroom, so
+  // the picture's own colours carry softly past its edges.
+  const ambientLayers = Array.from(
+    gallery.querySelectorAll<HTMLElement>("[data-gallery-ambient]"),
+  );
+  let ambientFront = 0;
+  let ambientSource = "";
+  const syncAmbient = () => {
+    const image = slides[active].querySelector<HTMLImageElement>("img[data-gallery-fit-image]");
+    if (!image || ambientLayers.length < 2) return;
+    const apply = () => {
+      const source = image.currentSrc || image.src;
+      if (!source || source === ambientSource || slides[active] !== image.closest("[data-gallery-photo]")) return;
+      ambientSource = source;
+      ambientFront = 1 - ambientFront;
+      const front = ambientLayers[ambientFront];
+      front.style.backgroundImage = `url("${source.replace(/"/g, '\\"')}")`;
+      front.dataset.current = "true";
+      delete ambientLayers[1 - ambientFront].dataset.current;
+    };
+    if (image.complete && image.naturalWidth > 0) apply();
+    else image.addEventListener("load", apply, { once: true, signal });
+  };
+
+  // Mutations from the initial setActive below arrive as a microtask, before
+  // this timeout; only changes after that count as the viewer moving on.
+  let settled = false;
+  window.setTimeout(() => {
+    settled = true;
+  });
+  const galleryObserver = new MutationObserver((records) => {
+    const changed = new Set(records.map((record) => record.attributeName));
+    if (changed.has("data-active-index")) {
+      syncAmbient();
+      if (settled) {
+        hideTitle();
+        endArrival();
+      }
+    }
+    if (changed.has("data-view") && settled) {
+      if (overviewOpen) showTitle(false);
+      else showTitle();
+    }
+    scheduleRender();
+  });
+  galleryObserver.observe(gallery, {
+    attributes: true,
+    attributeFilter: ["data-active-index", "data-view"],
+  });
+
+  signal.addEventListener("abort", () => {
+    [idleTimer, tapTimer, titleTimer, arrivalTimer, renderTimer, bandTimers.top, bandTimers.bottom]
+      .forEach((timer) => window.clearTimeout(timer));
+    galleryObserver.disconnect();
+    ["chromeTop", "chromeBottom", "idle", "title"].forEach((key) => {
+      delete shell.dataset[key];
+    });
+  }, { once: true });
+
+  render();
+  showTitle();
+  arrivalTimer = window.setTimeout(endArrival, 3200);
 
   const initialIndex = indexFromHash();
   previousButton.disabled = slides.length === 1;

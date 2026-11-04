@@ -1893,6 +1893,13 @@ export async function loadGallery(theme: ThemeSlug): Promise<ResolvedGalleryPhot
   );
 }
 
+// Preview captions name the collection a photograph belongs to.
+export function themeForPhoto(photoId: string): ThemeSlug | undefined {
+  return (Object.keys(galleries) as ThemeSlug[]).find((theme) =>
+    galleries[theme].some((photo) => photo.id === photoId),
+  );
+}
+
 export async function loadGalleryPhoto(photoId: string): Promise<ResolvedGalleryPhoto> {
   const matches = Object.entries(galleries).flatMap(([theme, photos]) =>
     photos.filter((photo) => photo.id === photoId).map((photo) => ({ theme, photo })),

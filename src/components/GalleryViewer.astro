@@ -79,6 +79,11 @@ const preparedPhotos = photos.map((photo) => {
     <h1 id="gallery-title">{theme.label[locale]}</h1>
   </header>
 
+  <div class="gallery-ambient" aria-hidden="true">
+    <span data-gallery-ambient></span>
+    <span data-gallery-ambient></span>
+  </div>
+
   <div class="gallery__body">
     <div class="gallery__single" data-gallery-single>
       <div class="gallery-stage" data-gallery-stage>
@@ -219,6 +224,11 @@ const preparedPhotos = photos.map((photo) => {
   </div>
 
   <footer class="gallery-toolbar" aria-label={theme.label[locale]}>
+    <p class="gallery-toolbar__title" aria-hidden="true">
+      <span>{chapter.label[locale]}</span>
+      <span>{theme.label[locale]}</span>
+    </p>
+
     <div class="gallery-toolbar__paging">
       <button type="button" data-gallery-previous aria-label={t.previousPhoto}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>

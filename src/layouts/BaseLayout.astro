@@ -72,7 +72,7 @@ const pageTransition = {
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#e9e3d6" data-theme-color />
+    <meta name="theme-color" content="#ecebe6" data-theme-color />
     <title>{title}</title>
     {locales.map((alternateLocale) => (
       <link
@@ -105,7 +105,7 @@ const pageTransition = {
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.querySelector("[data-theme-color]")?.setAttribute(
             "content",
-            dark ? "#1f2021" : "#e9e3d6",
+            dark ? "#1b1f24" : "#ecebe6",
           );
         };
 

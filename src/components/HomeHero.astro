@@ -14,11 +14,12 @@ import {
 type Props = { locale: Locale };
 const { locale } = Astro.props;
 const t = copy[locale];
+// The title is set as two vertical columns, broken after the particle.
+const titleBreak = siteTitle.indexOf("の") + 1;
+const titleLines = [siteTitle.slice(0, titleBreak), siteTitle.slice(titleBreak)];
 const slides = await Promise.all(
   chapters
-    .flatMap((chapter) =>
-      chapter.previews.map((preview, previewIndex) => ({ chapter, preview, previewIndex })),
-    )
+    .flatMap((chapter) => chapter.previews.map((preview) => ({ chapter, preview })))
     .map(async (slide) => {
       const preview: PreviewFrame = slide.preview;
       const photo = preview.homePhotoId
@@ -38,13 +39,14 @@ const slides = await Promise.all(
   class="home-hero"
   aria-labelledby="home-title"
   aria-roledescription="carousel"
+  data-locale={locale}
   data-carousel
   data-active-slide="0"
   data-cycle-state="running"
   data-cycle-duration="3000"
 >
   <div class="home-hero__slides" aria-live="off">
-    {slides.map(({ chapter, preview, previewIndex, photo, widths }, index) => (
+    {slides.map(({ chapter, preview, photo, widths }, index) => (
       <div
         class="home-hero__slide"
         data-carousel-slide
@@ -62,7 +64,7 @@ const slides = await Promise.all(
             formats={["webp"]}
             fallbackFormat="jpg"
             widths={widths}
-            sizes={`(max-width: 760px) max(100vw, calc((100svh - 6.2rem) * ${photo.image.width / photo.image.height})), 100vw`}
+            sizes={`(max-width: 760px) max(100vw, calc(100svh * ${photo.image.width / photo.image.height})), 100vw`}
             quality="high"
             alt={photo.alt[locale]}
             priority={index === 0}
@@ -72,15 +74,6 @@ const slides = await Promise.all(
             pictureAttributes={{ class: "home-hero__picture" }}
           />
         )}
-        <div class="home-hero__rule" aria-hidden="true"></div>
-        <p class="home-hero__place" lang={locale}>
-          <span>{chapter.number}</span>
-          <span>{chapter.placeholderLabel[locale]}</span>
-        </p>
-        <p class="home-hero__pending">
-          {!photo && <>{t.photographPending}<span aria-hidden="true"> · </span></>}
-          {String(previewIndex + 1).padStart(2, "0")} / 03
-        </p>
       </div>
     ))}
   </div>
@@ -88,28 +81,26 @@ const slides = await Promise.all(
   <div class="home-hero__shade" aria-hidden="true"></div>
 
   <div class="home-hero__content">
-    <div class="home-hero__copy">
-      <p class="home-hero__eyebrow">MORII · JAPAN · 2026</p>
-      <h1 id="home-title" lang="ja">{siteTitle}</h1>
+    <div class="home-hero__title">
+      <h1 id="home-title" lang="ja">
+        {titleLines.map((line) => <span>{line}</span>)}
+      </h1>
       <p class="home-hero__intro">{t.intro}</p>
     </div>
 
-    <div class="home-hero__navigation">
-      <nav class="chapter-rail" aria-label={t.chapters} data-chapter-rail>
-        {chapters.map((chapter, index) => (
-          <a
-            href={routeFor(locale, chapter.slug)}
-            data-carousel-group-link={chapter.slug}
-            data-active={index === 0 ? "true" : "false"}
-          >
-            <span class="chapter-rail__number">{chapter.number}</span>
-            <span class="chapter-rail__label">{chapter.label[locale]}</span>
-            <span class="chapter-rail__progress" aria-hidden="true"></span>
-          </a>
-        ))}
-      </nav>
+    <nav class="chapter-rail" aria-label={t.chapters} data-chapter-rail>
+      {chapters.map((chapter, index) => (
+        <a
+          href={routeFor(locale, chapter.slug)}
+          data-carousel-group-link={chapter.slug}
+          data-active={index === 0 ? "true" : "false"}
+        >
+          <span class="chapter-rail__label">{chapter.label[locale]}</span>
+          <span class="chapter-rail__progress" aria-hidden="true"></span>
+        </a>
+      ))}
+    </nav>
 
-      <CarouselControls locale={locale} />
-    </div>
+    <CarouselControls locale={locale} />
   </div>
 </section>

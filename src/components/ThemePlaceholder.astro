@@ -23,15 +23,13 @@ const preview = chapter.previews[0];
   style={`--placeholder: ${preview.background}; --placeholder-dark: ${preview.backgroundDark};`}
   aria-labelledby="theme-title"
 >
-  <div class="theme-placeholder__field" aria-hidden="true">
-    <span>{chapter.number}.{theme.number}</span>
-  </div>
+  <div class="theme-placeholder__field" aria-hidden="true"></div>
   <div class="theme-placeholder__content">
     <p>{t.photographsPending}</p>
     <h1 id="theme-title">{theme.label[locale]}</h1>
     <a href={routeFor(locale, chapter.slug)}>
+      <span aria-hidden="true">←</span>
       {t.backChapter}
-      <span aria-hidden="true">↗</span>
     </a>
   </div>
 </section>
