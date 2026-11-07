@@ -1,25 +1,26 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project_id": "moriium.gallery",
   "project_name": "Moriium Gallery",
-  "snapshot_at": "2026-11-02T17:02:10+08:00",
+  "snapshot_at": "2026-11-07T12:30:00+08:00",
   "source": {
     "branch": "main",
-    "commit_sha": "6a93a1ee6ca96c5c5310e0bd906cfeeaf04dea44",
+    "commit_sha": "37ccb7f72da99617155e4026660050412d7e399d",
     "tests_rerun": false,
     "basis": [
-      "2026-11-02 读取主目录 main@6a93a1ee6ca96c5c5310e0bd906cfeeaf04dea44；另核对主线 6a93a1ee6ca96c5c5310e0bd906cfeeaf04dea44。本地主目录、已合并主线和开发分支分别记录，不同步或重置代码。",
-      "Gallery 仅据本地 Git、源码与文档；未读取照片/EXIF、测试或核验线上。",
-      "保留上一份快照的事项 ID 与历史验证证据；本次不重跑项目测试、构建、私人数据或真实 Provider 验收。",
-      "2026-11-02 git status：HEAD 未变；照片、HomeHero、BaseLayout、site/images 脚本等仍在工作区，未提交。",
-      "src/components/DeferredPicture.astro",
-      "src/scripts/images.ts",
-      "src/components/GalleryViewer.astro",
-      "docs/status/README.md"
+      "2026-11-07 生成快照：只读 Git、GitHub PR 和仓库文档；不重跑测试、构建或真实验收",
+      "main@37ccb7f，与 origin/main 一致，工作区干净",
+      "git:552355b（洛北摄影集与延后图片加载）、git:37ccb7f（沉浸式改版）",
+      "DESIGN.md",
+      "未读取照片/EXIF，未核验线上；仓库内未见部署配置"
     ]
   },
+  "reporter": {
+    "agent": "claude",
+    "note": "Claude Opus 5.5"
+  },
   "stage": "launch_preparation",
-  "summary": "图库已提交基线仍是六集 96 张；京洛照片调整、洛北内容和界面微调仍未提交。工作区新增延后图片加载组件/脚本及首页布局改动，仅有源码证据，未验收。首发内容定稿、部署与主人验收仍缺完成记录，MoriMeta 联动可后置。",
+  "summary": "11 月 4 日提交并推送两项改动：新增洛北摄影集与延后图片加载；整体改为沉浸式日式极简设计（全屏照片、竖排标题、暗房式看图页）。现有七个摄影集。尚无构建、隐私检查与 Morii 验收记录，部署方案未定，MoriMeta 联动可后置。",
   "overall_progress": null,
   "milestones": [
     {
@@ -38,16 +39,12 @@
     },
     {
       "id": "committed-collections",
-      "title": "六个已提交摄影集共 96 张照片",
+      "title": "七个已提交摄影集（新增洛北）",
       "status": "done",
       "evidence_level": "repository",
       "evidence_refs": [
-        "git show 281bc02",
-        "git show 885f62a",
-        "git show 10dbe2a",
-        "git show fa0ee9c",
-        "git show 6a93a1e",
-        "git show 6a93a1e:src/data/galleries.ts"
+        "git:552355b",
+        "src/data/galleries.ts"
       ],
       "human_acceptance": "pending"
     },
@@ -65,14 +62,24 @@
     },
     {
       "id": "release-content-and-details",
-      "title": "首发照片、界面与延后图片加载（工作区未提交/未验收）",
-      "status": "in_progress",
+      "title": "京洛照片调整、洛北内容与延后图片加载（552355b 已提交并推送，未验收）",
+      "status": "done",
       "evidence_level": "repository",
       "evidence_refs": [
-        "2026-11-02 git status --short",
+        "git:552355b",
         "src/components/DeferredPicture.astro",
-        "src/scripts/images.ts",
-        "src/components/HomeHero.astro"
+        "src/scripts/images.ts"
+      ],
+      "human_acceptance": "pending"
+    },
+    {
+      "id": "immersive-redesign",
+      "title": "沉浸式日式极简改版：全屏照片、竖排标题、章节导轨、暗房式看图页（37ccb7f）",
+      "status": "done",
+      "evidence_level": "repository",
+      "evidence_refs": [
+        "git:37ccb7f",
+        "DESIGN.md"
       ],
       "human_acceptance": "pending"
     },
@@ -113,39 +120,47 @@
   ],
   "blockers": [
     {
-      "title": "首发版本没有定稿",
-      "impact": "照片替换、洛北内容、首页和图片加载改动仍在工作区；未做本次构建、隐私或真实界面验收，不能视为可直接发布。"
+      "id": "release-unaccepted",
+      "title": "首发版本未验收",
+      "impact": "改版和洛北内容已提交，但没有构建、照片隐私（EXIF）检查或 Morii 真实浏览验收记录，不能视为可直接发布。"
     },
     {
-      "title": "部署和正式验收无新记录",
-      "impact": "当前仓库资料未见托管/域名/上线结果闭环；不能认定已上线或当前在线。"
+      "id": "deploy-undecided",
+      "title": "部署和正式验收无记录",
+      "impact": "仓库里没有托管、域名或上线结果，不能认定已上线。"
     }
   ],
   "next_actions": [
     {
-      "title": "确认并定稿首发内容与现有改动",
+      "id": "accept-redesign",
+      "title": "验收沉浸式改版与七个摄影集",
       "priority": "P1",
-      "result": "确定照片范围、延后加载和首页调整，另行完成必要检查与主人验收。"
+      "result": "Morii 在桌面和手机上实际浏览，确认首发内容和改版是否定稿。"
     },
     {
+      "id": "deploy-plan",
       "title": "确定独立首发部署与回滚方案",
       "priority": "P1",
       "result": "明确托管、域名、公开路径和首发检查，保留原片与隐私边界。"
     },
     {
+      "id": "morimeta-later",
       "title": "首发后再决定 MoriMeta 对接",
       "priority": "P2",
-      "result": "明确交付格式和素材流转，不阻塞当前 Gallery 独立发布。"
+      "result": "明确交付格式和素材流转，不阻塞 Gallery 独立发布。"
     }
   ],
   "needs_morii": [
     {
+      "id": "hosting",
       "decision": "首发托管、域名和公开路径采用哪一方案？"
     },
     {
-      "decision": "是否纳入当前京洛调整、替换照片和洛北内容，何时正式验收？"
+      "id": "release-scope",
+      "decision": "沉浸式改版和七个摄影集是否作为首发内容，何时正式验收？"
     },
     {
+      "id": "morimeta-when",
       "decision": "MoriMeta 联动何时另行启动，首发是否继续独立推进？"
     }
   ]
