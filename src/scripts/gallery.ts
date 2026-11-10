@@ -142,12 +142,27 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       `translate(-50%, -50%) translate(${panX}px, ${panY}px) scale(${scale})`;
   };
 
+  // Paint a smaller copy that is already in memory behind an image that is
+  // still on its way; the real pixels cover it as soon as they arrive.
+  const showPlaceholder = (image: HTMLImageElement, source: HTMLImageElement | null) => {
+    if (image.complete && image.naturalWidth > 0) return;
+    if (!source?.complete || source.naturalWidth === 0 || !source.currentSrc) return;
+    image.style.backgroundImage = `url("${source.currentSrc.replace(/"/g, '\\"')}")`;
+    image.addEventListener("load", () => image.style.removeProperty("background-image"), {
+      once: true,
+      signal,
+    });
+  };
+
   const loadDetailImage = (slide: HTMLElement) => {
     const detail = slide.querySelector<HTMLElement>("[data-gallery-detail]");
     if (!detail || detail.dataset.loaded === "true") return;
 
     const image = detail.querySelector<HTMLImageElement>("[data-gallery-detail-image]");
-    if (image?.dataset.detailSrc) image.src = image.dataset.detailSrc;
+    if (image?.dataset.detailSrc) {
+      image.src = image.dataset.detailSrc;
+      showPlaceholder(image, slide.querySelector<HTMLImageElement>("[data-gallery-fit-image]"));
+    }
     detail.dataset.loaded = "true";
   };
 
@@ -345,9 +360,10 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     nextButton.disabled = open || slides.length === 1;
 
     if (open) {
-      overviewItems.forEach((item) => hydratePicture(item));
       requestAnimationFrame(() => {
+        // Size the rows first so lazy loading sees the real thumbnail boxes.
         layoutOverview();
+        overviewItems.forEach((item) => hydratePicture(item));
         if (moveFocus) {
           gallery
             .querySelector<HTMLButtonElement>(`[data-gallery-select="${active}"]`)
@@ -376,6 +392,8 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
       const image = hydratePicture(slides[index]);
       if (!image) return;
       image.loading = "eager";
+      // Neighbours wait behind whatever the viewer asks for next.
+      if (!image.complete) image.fetchPriority = "low";
       void image.decode().catch(() => undefined);
     });
   };
@@ -417,28 +435,47 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     outgoing.style.zIndex = "1";
     incoming.style.zIndex = "2";
 
-    photoAnimations = [
-      outgoing.animate(
-        [
-          { opacity: 1, transform: "translateX(0)" },
-          { opacity: 0, transform: `translateX(${direction * 1.25}%)` },
-        ],
-        { duration: 520, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "both" },
-      ),
-      incoming.animate(
-        [
-          { opacity: 0, transform: `translateX(${direction * -1.25}%) scale(0.995)` },
-          { opacity: 1, transform: "translateX(0) scale(1)" },
-        ],
-        { delay: 120, duration: 820, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "both" },
-      ),
-    ];
+    // Hold the current photograph until the next one can be painted, so the
+    // crossfade never reveals an empty frame; on a slow connection, stop
+    // waiting after a moment and let the photograph arrive during the fade.
+    incoming.style.opacity = "0";
+    const image = hydratePicture(incoming);
+    if (image) {
+      image.loading = "eager";
+      image.fetchPriority = "high";
+    }
+    const ready = image
+      ? Promise.race([
+          image.decode().catch(() => undefined),
+          new Promise((resolve) => window.setTimeout(resolve, 300)),
+        ])
+      : Promise.resolve();
 
-    void Promise.allSettled(photoAnimations.map((animation) => animation.finished)).then(() => {
+    void ready.then(() => {
       if (transitionId !== photoTransitionId) return;
-      photoAnimations.forEach((animation) => animation.cancel());
-      photoAnimations = [];
-      settleSlideVisibility();
+      photoAnimations = [
+        outgoing.animate(
+          [
+            { opacity: 1, transform: "translateX(0)" },
+            { opacity: 0, transform: `translateX(${direction * 1.25}%)` },
+          ],
+          { duration: 520, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "both" },
+        ),
+        incoming.animate(
+          [
+            { opacity: 0, transform: `translateX(${direction * -1.25}%) scale(0.995)` },
+            { opacity: 1, transform: "translateX(0) scale(1)" },
+          ],
+          { delay: 120, duration: 820, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "both" },
+        ),
+      ];
+
+      void Promise.allSettled(photoAnimations.map((animation) => animation.finished)).then(() => {
+        if (transitionId !== photoTransitionId) return;
+        photoAnimations.forEach((animation) => animation.cancel());
+        photoAnimations = [];
+        settleSlideVisibility();
+      });
     });
   };
 
@@ -512,26 +549,42 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
   gallery.querySelectorAll<HTMLButtonElement>("[data-gallery-select]").forEach((button) => {
     button.addEventListener("click", () => {
       setActive(Number(button.dataset.gallerySelect || "0"));
+      // The thumbnail just clicked stands in until the full picture arrives.
+      const image = hydratePicture(activeSlide());
+      if (image) showPlaceholder(image, button.querySelector<HTMLImageElement>("img"));
       setOverviewOpen(false, true, true);
     }, { signal });
   });
 
   slides.forEach((slide) => {
-    const fitImage = slide.querySelector<HTMLImageElement>("[data-gallery-fit-image]");
     const detailImage = slide.querySelector<HTMLImageElement>("[data-gallery-detail-image]");
     const error = slide.querySelector<HTMLElement>("[data-gallery-image-error]");
-    fitImage?.addEventListener("error", () => {
+    // Fit pictures are hydrated from templates only when needed, so their
+    // load and error events are caught on the slide on the way down.
+    const fitImageOf = (event: Event) =>
+      event.target instanceof HTMLImageElement && event.target.matches("[data-gallery-fit-image]")
+        ? event.target
+        : null;
+    slide.addEventListener("error", (event) => {
+      const fitImage = fitImageOf(event);
+      if (!fitImage) return;
       slide.dataset.imageError = "true";
       const fitPicture = fitImage.closest<HTMLElement>(".gallery-photo__fit");
       if (fitPicture) fitPicture.hidden = true;
       if (error) error.hidden = false;
-    }, { signal });
-    fitImage?.addEventListener("load", () => {
+    }, { capture: true, signal });
+    slide.addEventListener("load", (event) => {
+      const fitImage = fitImageOf(event);
+      if (!fitImage) return;
       delete slide.dataset.imageError;
+      slide.style.backgroundImage = "none";
       const fitPicture = fitImage.closest<HTMLElement>(".gallery-photo__fit");
       if (fitPicture) fitPicture.hidden = false;
       if (error) error.hidden = true;
-    }, { signal });
+    }, { capture: true, signal });
+    // The first photograph may have loaded before this script ran.
+    const fitImage = slide.querySelector<HTMLImageElement>("[data-gallery-fit-image]");
+    if (fitImage?.complete && fitImage.naturalWidth > 0) slide.style.backgroundImage = "none";
     detailImage?.addEventListener("error", () => {
       if (slide === activeSlide() && detailMode) resetDetail();
     }, { signal });
@@ -645,6 +698,12 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
     }
     swipeStart = undefined;
   };
+
+  // A loaded thumbnail no longer needs the blurred placeholder behind it.
+  overviewGrid.addEventListener("load", (event) => {
+    if (!(event.target instanceof HTMLImageElement)) return;
+    event.target.closest<HTMLElement>("button")?.style.setProperty("background-image", "none");
+  }, { capture: true, signal });
 
   stage.addEventListener("pointerup", finishPointer, { signal });
   stage.addEventListener("pointercancel", finishPointer, { signal });
@@ -869,27 +928,22 @@ function initializeGallery(gallery: HTMLElement, signal: AbortSignal) {
   }, { signal });
 
   // A blurred, dimmed copy of the current photograph fills the darkroom, so
-  // the picture's own colours carry softly past its edges.
+  // the picture's own colours carry softly past its edges. The inline blurred
+  // placeholder is enough for that, and it is there before the photograph is.
   const ambientLayers = Array.from(
     gallery.querySelectorAll<HTMLElement>("[data-gallery-ambient]"),
   );
   let ambientFront = 0;
   let ambientSource = "";
   const syncAmbient = () => {
-    const image = slides[active].querySelector<HTMLImageElement>("img[data-gallery-fit-image]");
-    if (!image || ambientLayers.length < 2) return;
-    const apply = () => {
-      const source = image.currentSrc || image.src;
-      if (!source || source === ambientSource || slides[active] !== image.closest("[data-gallery-photo]")) return;
-      ambientSource = source;
-      ambientFront = 1 - ambientFront;
-      const front = ambientLayers[ambientFront];
-      front.style.backgroundImage = `url("${source.replace(/"/g, '\\"')}")`;
-      front.dataset.current = "true";
-      delete ambientLayers[1 - ambientFront].dataset.current;
-    };
-    if (image.complete && image.naturalWidth > 0) apply();
-    else image.addEventListener("load", apply, { once: true, signal });
+    const source = slides[active].style.getPropertyValue("--lqip");
+    if (!source || source === ambientSource || ambientLayers.length < 2) return;
+    ambientSource = source;
+    ambientFront = 1 - ambientFront;
+    const front = ambientLayers[ambientFront];
+    front.style.backgroundImage = source;
+    front.dataset.current = "true";
+    delete ambientLayers[1 - ambientFront].dataset.current;
   };
 
   // Mutations from the initial setActive below arrive as a microtask, before

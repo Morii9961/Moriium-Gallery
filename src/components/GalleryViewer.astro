@@ -1,4 +1,5 @@
 ---
+import { getImage } from "astro:assets";
 import DeferredPicture from "./DeferredPicture.astro";
 import "../styles/gallery.css";
 import {
@@ -8,6 +9,7 @@ import {
   type Locale,
 } from "../data/site";
 import type { ResolvedGalleryPhoto } from "../data/galleries";
+import { blurPlaceholder, zoomImageOptions } from "../data/image-delivery";
 
 type Props = {
   locale: Locale;
@@ -23,7 +25,7 @@ const formatDate = new Intl.DateTimeFormat(
   { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" },
 );
 
-const preparedPhotos = photos.map((photo) => {
+const preparedPhotos = await Promise.all(photos.map(async (photo) => {
   const metadata = [
     photo.title?.[locale] ? [t.title, photo.title[locale]] : null,
     photo.capturedOn
@@ -48,14 +50,29 @@ const preparedPhotos = photos.map((photo) => {
     .filter((width) => width <= photo.image.width)
     .sort((a, b) => a - b);
 
+  const ratio = photo.image.width / photo.image.height;
+  // "Actual size" loads a full-resolution derivative, never the source file.
+  const [zoom, placeholder] = await Promise.all([
+    getImage({ src: photo.image, width: photo.image.width, ...zoomImageOptions }),
+    blurPlaceholder(photo.imagePath, ratio),
+  ]);
+
   return {
     ...photo,
     metadata,
     viewerWidths,
     overviewWidths,
-    ratio: photo.image.width / photo.image.height,
+    ratio,
+    zoomSrc: zoom.src,
+    placeholder,
+    // The fit picture fills the viewport with object-fit: contain, so it is
+    // as wide as the viewport only when the viewport is narrower than the
+    // photograph; otherwise its width is the viewport height times the ratio.
+    viewerSizes: `(min-aspect-ratio: ${photo.image.width}/${photo.image.height}) calc(100vh * ${ratio.toFixed(4)}), 100vw`,
+    // Overview rows are laid out at these target heights in gallery.ts.
+    overviewSizes: `(max-width: 520px) ${Math.round(220 * ratio)}px, (max-width: 960px) ${Math.round(250 * ratio)}px, ${Math.round(320 * ratio)}px`,
   };
-});
+}));
 ---
 
 <section
@@ -95,6 +112,7 @@ const preparedPhotos = photos.map((photo) => {
             data-photo-index={index}
             data-image-width={photo.image.width}
             data-image-height={photo.image.height}
+            style={`--lqip: ${photo.placeholder}`}
             aria-label={`${index + 1} / ${preparedPhotos.length}`}
             aria-hidden={index === 0 ? "false" : "true"}
             hidden={index !== 0}
@@ -102,10 +120,8 @@ const preparedPhotos = photos.map((photo) => {
             <DeferredPicture
               deferred={index !== 0}
               src={photo.image}
-              formats={["webp"]}
-              fallbackFormat="jpg"
               widths={photo.viewerWidths}
-              sizes="100vw"
+              sizes={photo.viewerSizes}
               alt={photo.alt[locale]}
               priority={index === 0}
               loading={index === 0 ? "eager" : "lazy"}
@@ -121,7 +137,7 @@ const preparedPhotos = photos.map((photo) => {
                 width={photo.image.width}
                 height={photo.image.height}
                 draggable="false"
-                data-detail-src={photo.image.src}
+                data-detail-src={photo.zoomSrc}
                 data-gallery-detail-image
               />
             </picture>
@@ -196,6 +212,7 @@ const preparedPhotos = photos.map((photo) => {
             role="listitem"
             data-gallery-overview-item
             data-ratio={photo.ratio}
+            style={`--lqip: ${photo.placeholder}`}
           >
             <button
               type="button"
@@ -206,10 +223,8 @@ const preparedPhotos = photos.map((photo) => {
               <DeferredPicture
                 deferred={true}
                 src={photo.image}
-                formats={["webp"]}
-                fallbackFormat="jpg"
                 widths={photo.overviewWidths}
-                sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes={photo.overviewSizes}
                 alt=""
                 loading="lazy"
                 class="gallery-overview__image"

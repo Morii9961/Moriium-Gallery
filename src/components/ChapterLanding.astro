@@ -54,11 +54,8 @@ const previews = await Promise.all(
             <DeferredPicture
               deferred={index !== 0}
               src={preview.photo.image}
-              formats={["webp"]}
-              fallbackFormat="jpg"
               widths={preview.widths}
               sizes="(max-width: 760px) max(100vw, calc(62svh * 1.5)), 64vw"
-              quality="high"
               alt={preview.photo.alt[locale]}
               priority={index === 0}
               loading="eager"
