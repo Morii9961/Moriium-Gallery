@@ -1,13 +1,15 @@
 ---
 import { Picture } from "astro:assets";
 import type { ComponentProps } from "astro/types";
+import { photoFallbackFormat, photoFormats } from "../data/image-delivery";
 
 type Props = ComponentProps<typeof Picture> & { deferred: boolean };
 const { deferred, ...picture } = Astro.props;
 ---
 
+{/* Output formats are decided once, in image-delivery.ts, for every photograph. */}
 {deferred ? (
-  <template data-deferred-picture><Picture {...picture} /></template>
+  <template data-deferred-picture><Picture {...picture} formats={photoFormats} fallbackFormat={photoFallbackFormat} /></template>
 ) : (
-  <Picture {...picture} />
+  <Picture {...picture} formats={photoFormats} fallbackFormat={photoFallbackFormat} />
 )}

@@ -273,6 +273,9 @@
     align-items: center;
     justify-content: center;
     margin: 0;
+    /* The blurred placeholder from GalleryViewer sits exactly where the
+       contained photograph will appear; gallery.ts drops it after loading. */
+    background: var(--lqip) 50% 50% / contain no-repeat content-box;
   }
 
   .gallery-photo__fit {
@@ -290,6 +293,11 @@
     display: block;
     object-fit: contain;
     object-position: 50% 50%;
+    /* Matches object-fit, so a placeholder set by gallery.ts sits exactly
+       where the photograph will appear. */
+    background-position: 50% 50%;
+    background-size: contain;
+    background-repeat: no-repeat;
     user-select: none;
   }
 
@@ -307,6 +315,7 @@
     max-width: none;
     max-height: none;
     display: block;
+    background-size: 100% 100%;
     transform-origin: center;
     user-select: none;
     will-change: transform;
@@ -474,7 +483,7 @@
     overflow: hidden;
     padding: 0;
     border: 0;
-    background: transparent;
+    background: var(--lqip) 50% 50% / contain no-repeat;
     color: var(--ink);
     cursor: pointer;
   }

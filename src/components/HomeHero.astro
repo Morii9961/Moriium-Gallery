@@ -61,11 +61,8 @@ const slides = await Promise.all(
           <DeferredPicture
             deferred={index !== 0}
             src={photo.image}
-            formats={["webp"]}
-            fallbackFormat="jpg"
             widths={widths}
             sizes={`(max-width: 760px) max(100vw, calc(100svh * ${photo.image.width / photo.image.height})), 100vw`}
-            quality="high"
             alt={photo.alt[locale]}
             priority={index === 0}
             loading="eager"
